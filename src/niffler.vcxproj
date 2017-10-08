@@ -186,16 +186,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bp_tree.cpp" />
-    <ClCompile Include="btree.cpp" />
     <ClCompile Include="files.cpp" />
     <ClCompile Include="storage_providers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bp_tree.h" />
-    <ClInclude Include="btree.h" />
     <ClInclude Include="files.h" />
     <ClInclude Include="storage_providers.h" />
-    <ClInclude Include="typedef.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

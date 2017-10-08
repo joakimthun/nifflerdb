@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="btree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bp_tree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -29,12 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="btree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="typedef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="bp_tree.h">
       <Filter>Header Files</Filter>
     </ClInclude>

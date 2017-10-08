@@ -18,9 +18,6 @@
     <ClCompile Include="tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="btree_tests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bp_tree_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

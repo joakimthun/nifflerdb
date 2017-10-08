@@ -192,7 +192,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bp_tree_tests.cpp" />
-    <ClCompile Include="btree_tests.cpp" />
     <ClCompile Include="tests.cpp" />
     <ClCompile Include="test_helpers.cpp" />
   </ItemGroup>
