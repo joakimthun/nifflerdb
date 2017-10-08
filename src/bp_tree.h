@@ -22,7 +22,7 @@ namespace niffler {
 	using key = int;
 	using value = int;
 
-	constexpr size_t BP_TREE_ORDER = 20;
+	constexpr size_t BP_TREE_ORDER = 10;
 
 	struct bp_tree_info {
 		size_t order = 0;

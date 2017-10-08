@@ -2,6 +2,7 @@
 
 #include "storage_providers.h"
 #include "bp_tree.h"
+#include "test_helpers.h"
 
 using namespace niffler;
 
@@ -247,16 +248,19 @@ TEST(BP_TREE, INSERT_NON_SPLIT)
 	}
 }
 
-TEST(BP_TREE, INSERT_SPLIT)
+TEST(BP_TREE, INSERT_1000_KEYS)
 {
 	auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 20)).value;
+    const auto num_keys = 1000;
 
-	for (auto i = 0; i < 1000; i++)
+	for (auto i = 0; i < num_keys; i++)
 	{
 		EXPECT_EQ(true, t->insert(i, i));
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
 	}
 
-    for (auto i = 0; i < 1000; i++)
+    for (auto i = 0; i < num_keys; i++)
     {
         EXPECT_EQ(false, t->insert(i, i));
     }

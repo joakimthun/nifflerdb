@@ -194,11 +194,15 @@
     <ClCompile Include="bp_tree_tests.cpp" />
     <ClCompile Include="btree_tests.cpp" />
     <ClCompile Include="tests.cpp" />
+    <ClCompile Include="test_helpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\niffler.vcxproj">
       <Project>{a02138e5-edd5-49cc-b492-044f316d4849}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="test_helpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

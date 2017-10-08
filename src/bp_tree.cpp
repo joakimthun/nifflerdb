@@ -60,7 +60,7 @@ namespace niffler {
         {
             bp_tree_node n;
             load_from_storage(&n, current_offset);
-            print_node_level(ss, info_.root_offset);
+            print_node_level(ss, current_offset);
             ss << std::endl;
 
             current_offset = n.children[0].offset;
@@ -465,7 +465,7 @@ namespace niffler {
         bp_tree_node n;
         load_from_storage(&n, node_offset);
 
-        ss << "[ ";
+        ss << "[";
 
         for (auto i = 0u; i < n.num_children; i++)
         {
@@ -476,7 +476,7 @@ namespace niffler {
             }
         }
 
-        ss << " ]";
+        ss << "]";
 
         if (n.next != 0)
         {
@@ -489,7 +489,7 @@ namespace niffler {
         bp_tree_leaf l;
         load_from_storage(&l, leaf_offset);
 
-        ss << "[ ";
+        ss << "[";
 
         for (auto i = 0u; i < l.num_records; i++)
         {
@@ -500,7 +500,7 @@ namespace niffler {
             }
         }
 
-        ss << " ]";
+        ss << "]";
 
         if (l.next != 0)
         {
