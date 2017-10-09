@@ -144,7 +144,7 @@ namespace niffler {
 
             /*
                 Prevent edge case where the key would be inserted into the right node but is less
-                than key@split_index and we would end up with a unsorted tree
+                than key@split_index and we would end up with an unsorted tree
                 E.g.
                 Insert key: 5528
                 Wrong:
