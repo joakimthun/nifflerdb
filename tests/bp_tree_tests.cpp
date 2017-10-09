@@ -9,76 +9,76 @@ using namespace niffler;
 
 TEST(BP_TREE, LEAF_BINARY_SEARCH)
 {
-	auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-	bp_tree_leaf leaf;
-	EXPECT_EQ(false, t->binary_search(leaf, 0));
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf leaf;
+    EXPECT_EQ(false, t->binary_search(leaf, 0));
 
-	leaf.records[0] = bp_tree_record{ 0, 0 };
-	leaf.records[1] = bp_tree_record{ 1, 0 };
-	leaf.records[2] = bp_tree_record{ 2, 0 };
-	leaf.records[3] = bp_tree_record{ 3, 0 };
-	leaf.records[4] = bp_tree_record{ 4, 0 };
-	leaf.records[5] = bp_tree_record{ 5, 0 };
-	leaf.records[6] = bp_tree_record{ 6, 0 };
-	leaf.records[7] = bp_tree_record{ 7, 0 };
-	leaf.records[8] = bp_tree_record{ 8, 0 };
-	leaf.num_records = 9;
+    leaf.records[0] = bp_tree_record{ 0, 0 };
+    leaf.records[1] = bp_tree_record{ 1, 0 };
+    leaf.records[2] = bp_tree_record{ 2, 0 };
+    leaf.records[3] = bp_tree_record{ 3, 0 };
+    leaf.records[4] = bp_tree_record{ 4, 0 };
+    leaf.records[5] = bp_tree_record{ 5, 0 };
+    leaf.records[6] = bp_tree_record{ 6, 0 };
+    leaf.records[7] = bp_tree_record{ 7, 0 };
+    leaf.records[8] = bp_tree_record{ 8, 0 };
+    leaf.num_records = 9;
 
-	EXPECT_EQ(true, t->binary_search(leaf, 0));
-	EXPECT_EQ(true, t->binary_search(leaf, 1));
-	EXPECT_EQ(true, t->binary_search(leaf, 2));
-	EXPECT_EQ(true, t->binary_search(leaf, 3));
-	EXPECT_EQ(true, t->binary_search(leaf, 4));
-	EXPECT_EQ(true, t->binary_search(leaf, 5));
-	EXPECT_EQ(true, t->binary_search(leaf, 6));
-	EXPECT_EQ(true, t->binary_search(leaf, 7));
-	EXPECT_EQ(true, t->binary_search(leaf, 8));
+    EXPECT_EQ(true, t->binary_search(leaf, 0));
+    EXPECT_EQ(true, t->binary_search(leaf, 1));
+    EXPECT_EQ(true, t->binary_search(leaf, 2));
+    EXPECT_EQ(true, t->binary_search(leaf, 3));
+    EXPECT_EQ(true, t->binary_search(leaf, 4));
+    EXPECT_EQ(true, t->binary_search(leaf, 5));
+    EXPECT_EQ(true, t->binary_search(leaf, 6));
+    EXPECT_EQ(true, t->binary_search(leaf, 7));
+    EXPECT_EQ(true, t->binary_search(leaf, 8));
 
-	EXPECT_EQ(false, t->binary_search(leaf, -1));
-	EXPECT_EQ(false, t->binary_search(leaf, 11));
-	EXPECT_EQ(false, t->binary_search(leaf, 200));
+    EXPECT_EQ(false, t->binary_search(leaf, -1));
+    EXPECT_EQ(false, t->binary_search(leaf, 11));
+    EXPECT_EQ(false, t->binary_search(leaf, 200));
 }
 
 TEST(BP_TREE, INSERT_RECORD_AT)
 {
-	auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-	bp_tree_leaf leaf;
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf leaf;
 
-	t->insert_record_at(leaf, -1, 0, 0);
-	EXPECT_EQ(1, leaf.num_records);
-	EXPECT_EQ(-1, leaf.records[0].key);
+    t->insert_record_at(leaf, -1, 0, 0);
+    EXPECT_EQ(1, leaf.num_records);
+    EXPECT_EQ(-1, leaf.records[0].key);
 
-	t->insert_record_at(leaf, -2, 0, 0);
-	EXPECT_EQ(2, leaf.num_records);
-	EXPECT_EQ(-2, leaf.records[0].key);
+    t->insert_record_at(leaf, -2, 0, 0);
+    EXPECT_EQ(2, leaf.num_records);
+    EXPECT_EQ(-2, leaf.records[0].key);
 
-	t->insert_record_at(leaf, 1, 0, 2);
-	EXPECT_EQ(3, leaf.num_records);
-	EXPECT_EQ(1, leaf.records[2].key);
+    t->insert_record_at(leaf, 1, 0, 2);
+    EXPECT_EQ(3, leaf.num_records);
+    EXPECT_EQ(1, leaf.records[2].key);
 
-	t->insert_record_at(leaf, 0, 0, 2);
-	EXPECT_EQ(4, leaf.num_records);
-	EXPECT_EQ(-2, leaf.records[0].key);
-	EXPECT_EQ(-1, leaf.records[1].key);
-	EXPECT_EQ(0, leaf.records[2].key);
-	EXPECT_EQ(1, leaf.records[3].key);
+    t->insert_record_at(leaf, 0, 0, 2);
+    EXPECT_EQ(4, leaf.num_records);
+    EXPECT_EQ(-2, leaf.records[0].key);
+    EXPECT_EQ(-1, leaf.records[1].key);
+    EXPECT_EQ(0, leaf.records[2].key);
+    EXPECT_EQ(1, leaf.records[3].key);
 
-	t->insert_record_at(leaf, 2, 0, 4);
-	EXPECT_EQ(5, leaf.num_records);
-	EXPECT_EQ(-2, leaf.records[0].key);
-	EXPECT_EQ(-1, leaf.records[1].key);
-	EXPECT_EQ(0, leaf.records[2].key);
-	EXPECT_EQ(1, leaf.records[3].key);
-	EXPECT_EQ(2, leaf.records[4].key);
+    t->insert_record_at(leaf, 2, 0, 4);
+    EXPECT_EQ(5, leaf.num_records);
+    EXPECT_EQ(-2, leaf.records[0].key);
+    EXPECT_EQ(-1, leaf.records[1].key);
+    EXPECT_EQ(0, leaf.records[2].key);
+    EXPECT_EQ(1, leaf.records[3].key);
+    EXPECT_EQ(2, leaf.records[4].key);
 
-	t->insert_record_at(leaf, -3, 0, 0);
-	EXPECT_EQ(6, leaf.num_records);
-	EXPECT_EQ(-3, leaf.records[0].key);
-	EXPECT_EQ(-2, leaf.records[1].key);
-	EXPECT_EQ(-1, leaf.records[2].key);
-	EXPECT_EQ(0, leaf.records[3].key);
-	EXPECT_EQ(1, leaf.records[4].key);
-	EXPECT_EQ(2, leaf.records[5].key);
+    t->insert_record_at(leaf, -3, 0, 0);
+    EXPECT_EQ(6, leaf.num_records);
+    EXPECT_EQ(-3, leaf.records[0].key);
+    EXPECT_EQ(-2, leaf.records[1].key);
+    EXPECT_EQ(-1, leaf.records[2].key);
+    EXPECT_EQ(0, leaf.records[3].key);
+    EXPECT_EQ(1, leaf.records[4].key);
+    EXPECT_EQ(2, leaf.records[5].key);
 }
 
 TEST(BP_TREE, INSERT_KEY_AT)
@@ -153,44 +153,44 @@ TEST(BP_TREE, FIND_INSERT_INDEX_LEAF)
 
 TEST(BP_TREE, INSERT_RECORD_NON_FULL)
 {
-	auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-	bp_tree_leaf leaf;
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf leaf;
 
-	t->insert_record_non_full(leaf, -1, 0);
-	EXPECT_EQ(1, leaf.num_records);
-	EXPECT_EQ(-1, leaf.records[0].key);
+    t->insert_record_non_full(leaf, -1, 0);
+    EXPECT_EQ(1, leaf.num_records);
+    EXPECT_EQ(-1, leaf.records[0].key);
 
-	t->insert_record_non_full(leaf, -2, 0);
-	EXPECT_EQ(2, leaf.num_records);
-	EXPECT_EQ(-2, leaf.records[0].key);
+    t->insert_record_non_full(leaf, -2, 0);
+    EXPECT_EQ(2, leaf.num_records);
+    EXPECT_EQ(-2, leaf.records[0].key);
 
-	t->insert_record_non_full(leaf, 1, 0);
-	EXPECT_EQ(3, leaf.num_records);
-	EXPECT_EQ(1, leaf.records[2].key);
+    t->insert_record_non_full(leaf, 1, 0);
+    EXPECT_EQ(3, leaf.num_records);
+    EXPECT_EQ(1, leaf.records[2].key);
 
-	t->insert_record_non_full(leaf, 0, 0);
-	EXPECT_EQ(4, leaf.num_records);
-	EXPECT_EQ(-2, leaf.records[0].key);
-	EXPECT_EQ(-1, leaf.records[1].key);
-	EXPECT_EQ(0, leaf.records[2].key);
-	EXPECT_EQ(1, leaf.records[3].key);
+    t->insert_record_non_full(leaf, 0, 0);
+    EXPECT_EQ(4, leaf.num_records);
+    EXPECT_EQ(-2, leaf.records[0].key);
+    EXPECT_EQ(-1, leaf.records[1].key);
+    EXPECT_EQ(0, leaf.records[2].key);
+    EXPECT_EQ(1, leaf.records[3].key);
 
-	t->insert_record_non_full(leaf, 2, 0);
-	EXPECT_EQ(5, leaf.num_records);
-	EXPECT_EQ(-2, leaf.records[0].key);
-	EXPECT_EQ(-1, leaf.records[1].key);
-	EXPECT_EQ(0, leaf.records[2].key);
-	EXPECT_EQ(1, leaf.records[3].key);
-	EXPECT_EQ(2, leaf.records[4].key);
+    t->insert_record_non_full(leaf, 2, 0);
+    EXPECT_EQ(5, leaf.num_records);
+    EXPECT_EQ(-2, leaf.records[0].key);
+    EXPECT_EQ(-1, leaf.records[1].key);
+    EXPECT_EQ(0, leaf.records[2].key);
+    EXPECT_EQ(1, leaf.records[3].key);
+    EXPECT_EQ(2, leaf.records[4].key);
 
-	t->insert_record_non_full(leaf, -3, 0);
-	EXPECT_EQ(6, leaf.num_records);
-	EXPECT_EQ(-3, leaf.records[0].key);
-	EXPECT_EQ(-2, leaf.records[1].key);
-	EXPECT_EQ(-1, leaf.records[2].key);
-	EXPECT_EQ(0, leaf.records[3].key);
-	EXPECT_EQ(1, leaf.records[4].key);
-	EXPECT_EQ(2, leaf.records[5].key);
+    t->insert_record_non_full(leaf, -3, 0);
+    EXPECT_EQ(6, leaf.num_records);
+    EXPECT_EQ(-3, leaf.records[0].key);
+    EXPECT_EQ(-2, leaf.records[1].key);
+    EXPECT_EQ(-1, leaf.records[2].key);
+    EXPECT_EQ(0, leaf.records[3].key);
+    EXPECT_EQ(1, leaf.records[4].key);
+    EXPECT_EQ(2, leaf.records[5].key);
 }
 
 TEST(BP_TREE, TRANSFER_RECORDS)
@@ -240,26 +240,26 @@ TEST(BP_TREE, TRANSFER_RECORDS)
 
 TEST(BP_TREE, INSERT_NON_SPLIT)
 {
-	auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
 
-	for (auto i = 0; i < BP_TREE_ORDER; i++)
-	{
-		EXPECT_EQ(true, t->insert(i, i));
+    for (auto i = 0; i < BP_TREE_ORDER; i++)
+    {
+        EXPECT_EQ(true, t->insert(i, i));
         EXPECT_EQ(false, t->insert(i, i));
-	}
+    }
 }
 
 TEST(BP_TREE, INSERT_1000_KEYS)
 {
-	auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 20)).value;
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 20)).value;
     const auto num_keys = 1000;
 
-	for (auto i = 0; i < num_keys; i++)
-	{
-		EXPECT_EQ(true, t->insert(i, i));
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->insert(i, i));
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
-	}
+    }
 
     for (auto i = 0; i < num_keys; i++)
     {

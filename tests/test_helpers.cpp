@@ -43,7 +43,7 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree> &tree, 
 
     // If this leaf is a direct child of the root node and the root only has 1 key, keys will not be in a valid state
     // which is fine since we only have 1 key and will traverse to the correct leaf anyway
-    if(is_root_descendant && leaf_parent.num_children == 1)
+    if (is_root_descendant && leaf_parent.num_children == 1)
         return true;
 
     for (auto i = 0u; i < leaf.num_records - 1; i++)
@@ -167,7 +167,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
     bp_tree_leaf leaf;
     tree->load_from_storage(&leaf, current_leaf_offset);
     current_prev_offset = 0;
-    
+
     result = validate_bp_tree_leaf(tree, leaf, current_leaf_offset, current_prev_offset);
     if (!result.valid)
         return result;
