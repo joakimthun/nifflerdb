@@ -142,11 +142,26 @@ namespace niffler {
             size_t split_index;
             std::tie(key_greater_than_key_at_split, split_index) = find_split_index(node.children, node.num_children - 1, key);
 
+            /* 
+                Prevent edge case where the key would be inserted into the right node but is less 
+                than key@split_index and we would end up with a unsorted tree
+                E.g.
+                Insert key: 5528
+                Wrong:
+                Original: [748, 1535, 2713, 3757, 4629, 6637, 7327, 8507, 8874, 9718] -> Split index: 5 -> 6637
+                Result:   [748, 1535, 2713, 3757, 4629, 6637] [5528, 7327, 8507, 8874, 9718]
+
+                Right:
+                Original: [748, 1535, 2713, 3757, 4629, 6637, 7327, 8507, 8874, 9718] -> Split index: 4 -> 4629
+                Result:   [748, 1535, 2713, 3757, 4629] [5528, 6637, 7327, 8507, 8874, 9718]
+            */
+            if (key_greater_than_key_at_split && key < node.children[split_index].key)
+                split_index--;
+
             // Key to transfer to parent
             auto middle_key = node.children[split_index].key;
 
-            // Since the middle key is being transfered to the parent node we add 1 to the index to skip it while 
-            // transfering children to the new node
+            // Add 1 to the index to skip the "middle key" while transfering
             transfer_children(node, new_node, split_index + 1);
 
             if (key_greater_than_key_at_split)
@@ -433,7 +448,7 @@ namespace niffler {
 			bp_tree_leaf old_next;
 			load_from_storage(&old_next, new_leaf.next);
 			old_next.prev = leaf.next;
-			save_to_storage(&new_leaf, leaf.next);
+			save_to_storage(&old_next, new_leaf.next);
 		}
 
 		save_to_storage(&info_, BASE_OFFSET_INFO_BLOCK);
@@ -453,7 +468,7 @@ namespace niffler {
             bp_tree_leaf old_next;
             load_from_storage(&old_next, new_node.next);
             old_next.prev = node.next;
-            save_to_storage(&new_node, node.next);
+            save_to_storage(&old_next, new_node.next);
         }
 
         save_to_storage(&info_, BASE_OFFSET_INFO_BLOCK);

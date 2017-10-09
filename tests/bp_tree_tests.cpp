@@ -1,4 +1,5 @@
 #include <gtest\gtest.h>
+#include <stdlib.h>
 
 #include "storage_providers.h"
 #include "bp_tree.h"
@@ -263,5 +264,21 @@ TEST(BP_TREE, INSERT_1000_KEYS)
     for (auto i = 0; i < num_keys; i++)
     {
         EXPECT_EQ(false, t->insert(i, i));
+    }
+}
+
+TEST(BP_TREE, INSERT_5000_RANDOM_KEYS)
+{
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 100)).value;
+    const auto num_keys = 5000;
+    srand(99);
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        auto key = rand();
+        t->insert(key, i);
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << key << ", index: " << i;
+        EXPECT_EQ(false, t->insert(key, i));
     }
 }
