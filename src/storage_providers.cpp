@@ -31,11 +31,6 @@ namespace niffler {
 
     bool mem_storage_provider::store(void *value, offset offset, size_t size) const
     {
-        if ((size + offset) >= size_)
-        {
-            auto x = 10;
-        }
-
         assert((size + offset) < size_);
         if ((size + offset) >= size_)
             return false;
