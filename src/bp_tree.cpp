@@ -103,20 +103,23 @@ namespace niffler {
 
     bool bp_tree::remove(const key &key)
     {
-        //auto parent_offset = search_tree(key);
-        //assert(parent_offset != 0);
+        auto parent_offset = search_tree(key);
+        assert(parent_offset != 0);
 
-        //auto leaf_offset = search_node(parent_offset, key);
-        //assert(leaf_offset != 0);
+        auto leaf_offset = search_node(parent_offset, key);
+        assert(leaf_offset != 0);
 
-        //bp_tree_leaf leaf;
-        //load_from_storage(&leaf, leaf_offset);
+        bp_tree_leaf leaf;
+        load_from_storage(&leaf, leaf_offset);
 
-        //// Key does not exists
-        //if (binary_search_record(leaf, key) == -1)
-        //    return false;
+        // Key does not exists
+        auto record_index = binary_search_record(leaf, key);
+        if (record_index == -1)
+            return false;
 
-        return false;
+
+
+        return true;
     }
 
     bp_tree::bp_tree(std::unique_ptr<storage_provider> storage)
@@ -325,6 +328,18 @@ namespace niffler {
         }
 
         source.num_records = from_index;
+    }
+
+    void bp_tree::remove_record_at(bp_tree_leaf &source, size_t index)
+    {
+        assert(index < source.num_records);
+
+        for (auto i = index; i < source.num_records - 1; i++)
+        {
+            source.records[i] = source.records[i + 1];
+        }
+
+        source.num_records--;
     }
 
     offset bp_tree::search_tree(const key &key) const
