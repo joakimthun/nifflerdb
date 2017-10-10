@@ -1,8 +1,5 @@
 #include "test_helpers.h"
 
-static size_t min_num_children() { return BP_TREE_ORDER / 2; }
-static size_t max_num_children() { return BP_TREE_ORDER; }
-
 bool find_key_for_node_offset(const bp_tree_node &node, offset target, key *key)
 {
     for (auto i = 0u; i < node.num_children; i++)

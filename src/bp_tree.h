@@ -25,6 +25,9 @@ namespace niffler {
 
     constexpr size_t BP_TREE_ORDER = 10;
 
+    constexpr size_t min_num_children() { return BP_TREE_ORDER / 2; }
+    constexpr size_t max_num_children() { return BP_TREE_ORDER; }
+
     struct bp_tree_info {
         size_t order = 0;
         size_t value_size = 0;
