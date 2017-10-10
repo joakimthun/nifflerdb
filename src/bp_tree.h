@@ -24,9 +24,8 @@ namespace niffler {
     using value = int;
 
     constexpr size_t BP_TREE_ORDER = 10;
-
-    constexpr size_t min_num_children() { return BP_TREE_ORDER / 2; }
-    constexpr size_t max_num_children() { return BP_TREE_ORDER; }
+    constexpr size_t MIN_NUM_CHILDREN() { return BP_TREE_ORDER / 2; }
+    constexpr size_t MAX_NUM_CHILDREN() { return BP_TREE_ORDER; }
 
     struct bp_tree_info {
         size_t order = 0;
@@ -92,7 +91,7 @@ namespace niffler {
         void insert_record_at(bp_tree_leaf &leaf, const key &key, const value &value, size_t index);
         void insert_record_split(const key& key, const value &value, offset leaf_offset, bp_tree_leaf &leaf, bp_tree_leaf &new_leaf);
         void transfer_records(bp_tree_leaf &source, bp_tree_leaf &target, size_t from_index);
-        void remove_record(bp_tree_leaf &source, const key &key);
+        bool remove_record(bp_tree_leaf &source, const key &key);
         void remove_record_at(bp_tree_leaf &source, size_t index);
 
         template<class T>

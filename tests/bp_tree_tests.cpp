@@ -352,3 +352,41 @@ TEST(BP_TREE, REMOVE_RECORD)
     EXPECT_EQ(5, leaf.records[3].key);
     EXPECT_EQ(8, leaf.records[6].key);
 }
+
+TEST(BP_TREE, REMOVE_NO_MERGE_BORROW)
+{
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
+    const auto num_keys = 250;
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->insert(i, i));
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
+    }
+
+    // All keys removed are in non minimal leafs
+    EXPECT_EQ(true, t->remove(197));
+    auto result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 197;
+
+    EXPECT_EQ(true, t->remove(203));
+    result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 203;
+
+    EXPECT_EQ(true, t->remove(217));
+    result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 217;
+
+    EXPECT_EQ(true, t->remove(230));
+    result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 230;
+
+    EXPECT_EQ(true, t->remove(242));
+    result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 242;
+
+    EXPECT_EQ(true, t->remove(248));
+    result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 248;
+}

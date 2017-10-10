@@ -27,10 +27,10 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree> &tree, 
     // e.g. only 1 key in the tree
     if (!is_root_descendant)
     {
-        if (leaf.num_records < min_num_children())
+        if (leaf.num_records < MIN_NUM_CHILDREN())
             return "leaf has to few children";
 
-        if (leaf.num_records > max_num_children())
+        if (leaf.num_records > MAX_NUM_CHILDREN())
             return "leaf has to many children";
     }
 
@@ -99,10 +99,10 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree> &tree, 
     if (node.prev != prev_offset)
         return "node points to wrong left neighbour";
 
-    if (node.num_children < min_num_children())
+    if (node.num_children < MIN_NUM_CHILDREN())
         return "node has to few children";
 
-    if (node.num_children > max_num_children())
+    if (node.num_children > MAX_NUM_CHILDREN())
         return "node has to many children";
 
     auto result = validate_bp_tree_keys(tree, node, last_nlevel);

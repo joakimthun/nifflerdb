@@ -112,12 +112,11 @@ namespace niffler {
         bp_tree_leaf leaf;
         load_from_storage(&leaf, leaf_offset);
 
-        // Key does not exists
-        auto record_index = binary_search_record(leaf, key);
-        if (record_index == -1)
+        // Return false if the key does not exists
+        if (!remove_record(leaf, key))
             return false;
 
-
+        assert(leaf.num_records >= MIN_NUM_CHILDREN());
 
         return true;
     }
@@ -330,11 +329,14 @@ namespace niffler {
         source.num_records = from_index;
     }
 
-    void bp_tree::remove_record(bp_tree_leaf &source, const key &key)
+    bool bp_tree::remove_record(bp_tree_leaf &source, const key &key)
     {
         auto remove_index = binary_search_record(source, key);
-        assert(remove_index >= 0);
+        if (remove_index < 0)
+            return false;
+
         remove_record_at(source, static_cast<size_t>(remove_index));
+        return true;
     }
 
     void bp_tree::remove_record_at(bp_tree_leaf &source, size_t index)
