@@ -330,6 +330,13 @@ namespace niffler {
         source.num_records = from_index;
     }
 
+    void bp_tree::remove_record(bp_tree_leaf &source, const key &key)
+    {
+        auto remove_index = binary_search_record(source, key);
+        assert(remove_index >= 0);
+        remove_record_at(source, static_cast<size_t>(remove_index));
+    }
+
     void bp_tree::remove_record_at(bp_tree_leaf &source, size_t index)
     {
         assert(index < source.num_records);

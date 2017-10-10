@@ -89,6 +89,7 @@ namespace niffler {
         void insert_record_at(bp_tree_leaf &leaf, const key &key, const value &value, size_t index);
         void insert_record_split(const key& key, const value &value, offset leaf_offset, bp_tree_leaf &leaf, bp_tree_leaf &new_leaf);
         void transfer_records(bp_tree_leaf &source, bp_tree_leaf &target, size_t from_index);
+        void remove_record(bp_tree_leaf &source, const key &key);
         void remove_record_at(bp_tree_leaf &source, size_t index);
 
         template<class T>

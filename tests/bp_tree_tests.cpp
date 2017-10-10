@@ -317,3 +317,38 @@ TEST(BP_TREE, REMOVE_RECORD_AT)
     EXPECT_EQ(5, leaf.records[3].key);
     EXPECT_EQ(8, leaf.records[6].key);
 }
+
+TEST(BP_TREE, REMOVE_RECORD)
+{
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf leaf;
+    leaf.records[0] = bp_tree_record{ 0, 0 };
+    leaf.records[1] = bp_tree_record{ 1, 0 };
+    leaf.records[2] = bp_tree_record{ 2, 0 };
+    leaf.records[3] = bp_tree_record{ 3, 0 };
+    leaf.records[4] = bp_tree_record{ 4, 0 };
+    leaf.records[5] = bp_tree_record{ 5, 0 };
+    leaf.records[6] = bp_tree_record{ 6, 0 };
+    leaf.records[7] = bp_tree_record{ 7, 0 };
+    leaf.records[8] = bp_tree_record{ 8, 0 };
+    leaf.records[9] = bp_tree_record{ 9, 0 };
+    leaf.num_records = 10;
+
+    t->remove_record(leaf, 0);
+    EXPECT_EQ(9, leaf.num_records);
+    EXPECT_EQ(1, leaf.records[0].key);
+    EXPECT_EQ(2, leaf.records[1].key);
+    EXPECT_EQ(9, leaf.records[8].key);
+
+    t->remove_record(leaf, 4);
+    EXPECT_EQ(8, leaf.num_records);
+    EXPECT_EQ(1, leaf.records[0].key);
+    EXPECT_EQ(5, leaf.records[3].key);
+    EXPECT_EQ(9, leaf.records[7].key);
+
+    t->remove_record(leaf, 9);
+    EXPECT_EQ(7, leaf.num_records);
+    EXPECT_EQ(1, leaf.records[0].key);
+    EXPECT_EQ(5, leaf.records[3].key);
+    EXPECT_EQ(8, leaf.records[6].key);
+}
