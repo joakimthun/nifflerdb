@@ -11,7 +11,7 @@ TEST(BP_TREE, LEAF_BINARY_SEARCH)
 {
     auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
     bp_tree_leaf leaf;
-    EXPECT_EQ(false, t->binary_search(leaf, 0));
+    EXPECT_EQ(-1, t->binary_search_record(leaf, 0));
 
     leaf.records[0] = bp_tree_record{ 0, 0 };
     leaf.records[1] = bp_tree_record{ 1, 0 };
@@ -24,19 +24,19 @@ TEST(BP_TREE, LEAF_BINARY_SEARCH)
     leaf.records[8] = bp_tree_record{ 8, 0 };
     leaf.num_records = 9;
 
-    EXPECT_EQ(true, t->binary_search(leaf, 0));
-    EXPECT_EQ(true, t->binary_search(leaf, 1));
-    EXPECT_EQ(true, t->binary_search(leaf, 2));
-    EXPECT_EQ(true, t->binary_search(leaf, 3));
-    EXPECT_EQ(true, t->binary_search(leaf, 4));
-    EXPECT_EQ(true, t->binary_search(leaf, 5));
-    EXPECT_EQ(true, t->binary_search(leaf, 6));
-    EXPECT_EQ(true, t->binary_search(leaf, 7));
-    EXPECT_EQ(true, t->binary_search(leaf, 8));
+    EXPECT_EQ(0, t->binary_search_record(leaf, 0));
+    EXPECT_EQ(1, t->binary_search_record(leaf, 1));
+    EXPECT_EQ(2, t->binary_search_record(leaf, 2));
+    EXPECT_EQ(3, t->binary_search_record(leaf, 3));
+    EXPECT_EQ(4, t->binary_search_record(leaf, 4));
+    EXPECT_EQ(5, t->binary_search_record(leaf, 5));
+    EXPECT_EQ(6, t->binary_search_record(leaf, 6));
+    EXPECT_EQ(7, t->binary_search_record(leaf, 7));
+    EXPECT_EQ(8, t->binary_search_record(leaf, 8));
 
-    EXPECT_EQ(false, t->binary_search(leaf, -1));
-    EXPECT_EQ(false, t->binary_search(leaf, 11));
-    EXPECT_EQ(false, t->binary_search(leaf, 200));
+    EXPECT_EQ(-1, t->binary_search_record(leaf, -1));
+    EXPECT_EQ(-1, t->binary_search_record(leaf, 11));
+    EXPECT_EQ(-1, t->binary_search_record(leaf, 200));
 }
 
 TEST(BP_TREE, INSERT_RECORD_AT)
@@ -281,4 +281,9 @@ TEST(BP_TREE, INSERT_5000_RANDOM_KEYS)
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << key << ", index: " << i;
         EXPECT_EQ(false, t->insert(key, i));
     }
+}
+
+TEST(BP_TREE, REMOVE_KEY)
+{
+    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
 }

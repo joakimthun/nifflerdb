@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <string>
 #include <sstream>
+#include <stdint.h>
 
 #include "files.h"
 #include "util.h"
@@ -71,6 +72,7 @@ namespace niffler {
         const bp_tree_info &info() const;
         string print() const;
         bool insert(const key& key, const value &value);
+        bool remove(const key& key);
 
         // Use gtest friend stuff?
         //private:
@@ -109,7 +111,7 @@ namespace niffler {
         size_t find_insert_index(const bp_tree_leaf &leaf, const key &key) const;
         size_t find_insert_index(const bp_tree_node &node, const key &key) const;
         const bp_tree_node_child &find_node_child(const bp_tree_node &node, const key &key) const;
-        bool binary_search(const bp_tree_leaf &leaf, const key &key);
+        int64_t binary_search_record(const bp_tree_leaf &leaf, const key &key);
 
         offset alloc_node(bp_tree_node &node);
         offset alloc_leaf(bp_tree_leaf &leaf);

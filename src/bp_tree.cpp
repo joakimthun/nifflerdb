@@ -1,6 +1,5 @@
 #include "bp_tree.h"
 
-#include <stdint.h>
 #include <assert.h>
 
 namespace niffler {
@@ -84,7 +83,7 @@ namespace niffler {
         load_from_storage(&leaf, leaf_offset);
 
         // Key already exists
-        if (binary_search(leaf, key))
+        if (binary_search_record(leaf, key) >= 0)
             return false;
 
         if (leaf.num_records == info_.order)
@@ -100,6 +99,24 @@ namespace niffler {
         }
 
         return true;
+    }
+
+    bool bp_tree::remove(const key &key)
+    {
+        //auto parent_offset = search_tree(key);
+        //assert(parent_offset != 0);
+
+        //auto leaf_offset = search_node(parent_offset, key);
+        //assert(leaf_offset != 0);
+
+        //bp_tree_leaf leaf;
+        //load_from_storage(&leaf, leaf_offset);
+
+        //// Key does not exists
+        //if (binary_search_record(leaf, key) == -1)
+        //    return false;
+
+        return false;
     }
 
     bp_tree::bp_tree(std::unique_ptr<storage_provider> storage)
@@ -377,10 +394,10 @@ namespace niffler {
         return node.children[node.num_children - 1];
     }
 
-    bool bp_tree::binary_search(const bp_tree_leaf &leaf, const key &key)
+    int64_t bp_tree::binary_search_record(const bp_tree_leaf &leaf, const key &key)
     {
         if (leaf.num_records == 0)
-            return false;
+            return -1;
 
         int64_t low = 0;
         int64_t high = static_cast<int64_t>(leaf.num_records - 1);
@@ -390,7 +407,7 @@ namespace niffler {
             auto mid = low + (high - low) / 2;
             auto current_key = leaf.records[mid].key;
             if (current_key == key)
-                return true;
+                return mid;
 
             if (current_key < key)
             {
@@ -402,7 +419,7 @@ namespace niffler {
             }
         }
 
-        return false;
+        return -1;
     }
 
     offset bp_tree::alloc_node(bp_tree_node &node)
