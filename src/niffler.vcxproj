@@ -104,7 +104,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <EnableModules>false</EnableModules>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -116,7 +116,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <EnableModules>false</EnableModules>
       <PreprocessorDefinitions>TEST_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -129,7 +129,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <EnableModules>false</EnableModules>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -141,7 +141,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <EnableModules>false</EnableModules>
       <PreprocessorDefinitions>TEST_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -156,7 +156,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableModules>false</EnableModules>
     </ClCompile>
@@ -175,7 +175,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableModules>false</EnableModules>
     </ClCompile>
