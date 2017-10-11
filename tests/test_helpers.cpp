@@ -20,7 +20,7 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree> &tree, 
         return "leaf points to wrong left neighbour";
 
     bp_tree_node leaf_parent;
-    tree->load_from_storage(&leaf_parent, leaf.parent);
+    tree->load(&leaf_parent, leaf.parent);
     auto is_root_descendant = leaf_parent.parent == 0;
 
     // If this leaf is a direct child of the root node it cant be within the valid children range
@@ -62,7 +62,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree> &tree, 
         {
             auto& child = node.children[i];
             bp_tree_leaf leaf;
-            tree->load_from_storage(&leaf, child.offset);
+            tree->load(&leaf, child.offset);
 
             for (auto j = 0u; j < leaf.num_records; j++)
             {
@@ -79,7 +79,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree> &tree, 
         {
             auto& child = node.children[i];
             bp_tree_node child_node;
-            tree->load_from_storage(&child_node, child.offset);
+            tree->load(&child_node, child.offset);
 
             for (auto j = 0u; j < child_node.num_children; j++)
             {
@@ -112,7 +112,7 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree> &tree, 
     if (node.next)
     {
         bp_tree_node next_node;
-        tree->load_from_storage(&next_node, node.next);
+        tree->load(&next_node, node.next);
         return validate_bp_tree_node(tree, next_node, node.next, current_offset, last_nlevel);
     }
 
@@ -122,7 +122,7 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree> &tree, 
 bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
 {
     bp_tree_node root;
-    tree->load_from_storage(&root, tree->info().root_offset);
+    tree->load(&root, tree->info().root_offset);
 
     if (tree->info().height == 0)
         return "tree has no height";
@@ -146,7 +146,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
     while (height > 1)
     {
         bp_tree_node node;
-        tree->load_from_storage(&node, current_offset);
+        tree->load(&node, current_offset);
         next_row_first_offset = node.children[0].offset;
 
         result = validate_bp_tree_node(tree, node, current_offset, current_prev_offset, height <= 2);
@@ -162,7 +162,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
     // Validate leaf level
     auto current_leaf_offset = next_row_first_offset;
     bp_tree_leaf leaf;
-    tree->load_from_storage(&leaf, current_leaf_offset);
+    tree->load(&leaf, current_leaf_offset);
     current_prev_offset = 0;
 
     result = validate_bp_tree_leaf(tree, leaf, current_leaf_offset, current_prev_offset);
@@ -177,7 +177,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
 
         current_prev_offset = current_leaf_offset;
         current_leaf_offset = leaf.next;
-        tree->load_from_storage(&leaf, current_leaf_offset);
+        tree->load(&leaf, current_leaf_offset);
     }
 
     return true;
