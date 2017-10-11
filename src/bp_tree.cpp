@@ -37,9 +37,9 @@ namespace niffler {
         root.num_children = 1;
 
         // Save inital tree to the underlying storage
-        t->save_to_storage(&t->info_, BASE_OFFSET_INFO_BLOCK);
-        t->save_to_storage(&root, t->info_.root_offset);
-        t->save_to_storage(&leaf, leaf_offset);
+        t->save(&t->info_, BASE_OFFSET_INFO_BLOCK);
+        t->save(&root, t->info_.root_offset);
+        t->save(&leaf, leaf_offset);
 
         return result<bp_tree>(true, std::move(t));
     }
@@ -58,7 +58,7 @@ namespace niffler {
         do
         {
             bp_tree_node n;
-            load_from_storage(&n, current_offset);
+            load(&n, current_offset);
             print_node_level(ss, current_offset);
             ss << std::endl;
 
@@ -80,7 +80,7 @@ namespace niffler {
         assert(leaf_offset != 0);
 
         bp_tree_leaf leaf;
-        load_from_storage(&leaf, leaf_offset);
+        load(&leaf, leaf_offset);
 
         // Key already exists
         if (binary_search_record(leaf, key) >= 0)
@@ -95,7 +95,7 @@ namespace niffler {
         else
         {
             insert_record_non_full(leaf, key, value);
-            save_to_storage(&leaf, leaf_offset);
+            save(&leaf, leaf_offset);
         }
 
         return true;
@@ -110,7 +110,7 @@ namespace niffler {
         assert(leaf_offset != 0);
 
         bp_tree_leaf leaf;
-        load_from_storage(&leaf, leaf_offset);
+        load(&leaf, leaf_offset);
 
         // Return false if the key does not exists
         if (!remove_record(leaf, key))
@@ -141,8 +141,8 @@ namespace niffler {
             root.children[0].offset = left_offset;
             root.children[1].offset = right_offset;
 
-            save_to_storage(&info_, BASE_OFFSET_INFO_BLOCK);
-            save_to_storage(&root, info_.root_offset);
+            save(&info_, BASE_OFFSET_INFO_BLOCK);
+            save(&root, info_.root_offset);
 
             set_parent_ptr(root.children, root.num_children, info_.root_offset);
 
@@ -150,7 +150,7 @@ namespace niffler {
         }
 
         bp_tree_node node;
-        load_from_storage(&node, node_offset);
+        load(&node, node_offset);
 
         if (node.num_children == info_.order)
         {
@@ -192,8 +192,8 @@ namespace niffler {
                 insert_key_non_full(node, key, right_offset);
             }
 
-            save_to_storage(&node, node_offset);
-            save_to_storage(&new_node, new_node_offset);
+            save(&node, node_offset);
+            save(&new_node, new_node_offset);
             set_parent_ptr(new_node.children, new_node.num_children, new_node_offset);
 
             // Insert the middle key into the parent node
@@ -202,7 +202,7 @@ namespace niffler {
         else
         {
             insert_key_non_full(node, key, right_offset);
-            save_to_storage(&node, node_offset);
+            save(&node, node_offset);
         }
     }
 
@@ -246,9 +246,9 @@ namespace niffler {
         bp_tree_node node;
         for (auto i = 0; i < c_length; i++)
         {
-            load_from_storage(&node, children[i].offset);
+            load(&node, children[i].offset);
             node.parent = parent;
-            save_to_storage(&node, children[i].offset);
+            save(&node, children[i].offset);
         }
     }
 
@@ -310,8 +310,8 @@ namespace niffler {
             insert_record_non_full(leaf, key, value);
         }
 
-        save_to_storage(&leaf, leaf_offset);
-        save_to_storage(&new_leaf, new_leaf_offset);
+        save(&leaf, leaf_offset);
+        save(&new_leaf, new_leaf_offset);
     }
 
     void bp_tree::transfer_records(bp_tree_leaf &source, bp_tree_leaf &target, size_t from_index)
@@ -359,7 +359,7 @@ namespace niffler {
         while (height > 1)
         {
             bp_tree_node node;
-            load_from_storage(&node, current_offset);
+            load(&node, current_offset);
             current_offset = find_node_child(node, key).offset;
             height -= 1;
         }
@@ -370,7 +370,7 @@ namespace niffler {
     offset bp_tree::search_node(offset offset, const key &key) const
     {
         bp_tree_node node;
-        load_from_storage(&node, offset);
+        load(&node, offset);
         return find_node_child(node, key).offset;
     }
 
@@ -487,12 +487,12 @@ namespace niffler {
         if (new_leaf.next != 0)
         {
             bp_tree_leaf old_next;
-            load_from_storage(&old_next, new_leaf.next);
+            load(&old_next, new_leaf.next);
             old_next.prev = leaf.next;
-            save_to_storage(&old_next, new_leaf.next);
+            save(&old_next, new_leaf.next);
         }
 
-        save_to_storage(&info_, BASE_OFFSET_INFO_BLOCK);
+        save(&info_, BASE_OFFSET_INFO_BLOCK);
         return leaf.next;
     }
 
@@ -507,19 +507,19 @@ namespace niffler {
         if (new_node.next != 0)
         {
             bp_tree_leaf old_next;
-            load_from_storage(&old_next, new_node.next);
+            load(&old_next, new_node.next);
             old_next.prev = node.next;
-            save_to_storage(&old_next, new_node.next);
+            save(&old_next, new_node.next);
         }
 
-        save_to_storage(&info_, BASE_OFFSET_INFO_BLOCK);
+        save(&info_, BASE_OFFSET_INFO_BLOCK);
         return node.next;
     }
 
     void bp_tree::print_node_level(stringstream &ss, offset node_offset) const
     {
         bp_tree_node n;
-        load_from_storage(&n, node_offset);
+        load(&n, node_offset);
 
         ss << "[";
 
@@ -543,7 +543,7 @@ namespace niffler {
     void bp_tree::print_leaf_level(stringstream &ss, offset leaf_offset) const
     {
         bp_tree_leaf l;
-        load_from_storage(&l, leaf_offset);
+        load(&l, leaf_offset);
 
         ss << "[";
 

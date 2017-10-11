@@ -128,14 +128,14 @@ namespace niffler {
         void print_leaf_level(stringstream &ss, offset leaf_offset) const;
 
         template<class T>
-        void load_from_storage(T *buffer, offset offset) const
+        void load(T *buffer, offset offset) const
         {
             static_assert(std::is_same<T, bp_tree_node>::value || std::is_same<T, bp_tree_leaf>::value || std::is_same<T, bp_tree_info>::value, "T must be a node, leaf or info");
             storage_->load(buffer, offset, sizeof(T));
         }
 
         template<class T>
-        void save_to_storage(T *value, offset offset) const
+        void save(T *value, offset offset) const
         {
             static_assert(std::is_same<T, bp_tree_node>::value || std::is_same<T, bp_tree_leaf>::value || std::is_same<T, bp_tree_info>::value, "T must be a node, leaf or info");
             storage_->store(value, offset, sizeof(T));
