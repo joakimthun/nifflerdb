@@ -116,7 +116,17 @@ namespace niffler {
         if (!remove_record(leaf, key))
             return false;
 
-        assert(leaf.num_records >= MIN_NUM_CHILDREN());
+        // If this is the only leaf we cant really borrow/merge so we accept any number of records
+        const auto min_num_records = info_.num_leaf_nodes == 1 ? 0 : MIN_NUM_CHILDREN();
+
+        if (leaf.num_records < min_num_records)
+        {
+            assert(true && "leaf.num_records < min_num_records");
+        }
+        else
+        {
+            save(&leaf, leaf_offset);
+        }
 
         return true;
     }
