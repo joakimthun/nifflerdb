@@ -244,7 +244,7 @@ namespace niffler {
     void bp_tree::set_parent_ptr(bp_tree_node_child *children, size_t c_length, offset parent)
     {
         bp_tree_node node;
-        for (auto i = 0; i < c_length; i++)
+        for (auto i = 0u; i < c_length; i++)
         {
             load(&node, children[i].offset);
             node.parent = parent;
