@@ -1,6 +1,7 @@
 #include "test_helpers.h"
 
-bool find_key_for_node_offset(const bp_tree_node &node, offset target, key *key)
+template<size_t N>
+bool find_key_for_node_offset(const bp_tree_node<N> &node, offset target, key *key)
 {
     for (auto i = 0u; i < node.num_children; i++)
     {
@@ -14,12 +15,13 @@ bool find_key_for_node_offset(const bp_tree_node &node, offset target, key *key)
     return false;
 }
 
-bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree> &tree, bp_tree_leaf &leaf, offset current_offset, offset prev_offset)
+template<size_t N>
+bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tree, bp_tree_leaf<N> &leaf, offset current_offset, offset prev_offset)
 {
     if (leaf.prev != prev_offset)
         return "leaf points to wrong left neighbour";
 
-    bp_tree_node leaf_parent;
+    bp_tree_node<N> leaf_parent;
     tree->load(&leaf_parent, leaf.parent);
     auto is_root_descendant = leaf_parent.parent == 0;
 
@@ -54,14 +56,15 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree> &tree, 
     return true;
 }
 
-bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree> &tree, bp_tree_node &node, bool last_nlevel)
+template<size_t N>
+bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tree, bp_tree_node<N> &node, bool last_nlevel)
 {
     if (last_nlevel)
     {
         for (auto i = 0u; i < node.num_children - 1; i++)
         {
             auto& child = node.children[i];
-            bp_tree_leaf leaf;
+            bp_tree_leaf<N> leaf;
             tree->load(&leaf, child.offset);
 
             for (auto j = 0u; j < leaf.num_records; j++)
@@ -78,7 +81,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree> &tree, 
         for (auto i = 0u; i < node.num_children - 1; i++)
         {
             auto& child = node.children[i];
-            bp_tree_node child_node;
+            bp_tree_node<N> child_node;
             tree->load(&child_node, child.offset);
 
             for (auto j = 0u; j < child_node.num_children; j++)
@@ -94,7 +97,8 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree> &tree, 
     return true;
 }
 
-bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree> &tree, bp_tree_node &node, offset current_offset, offset prev_offset, bool last_nlevel)
+template<size_t N>
+bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree<N>> &tree, bp_tree_node<N> &node, offset current_offset, offset prev_offset, bool last_nlevel)
 {
     if (node.prev != prev_offset)
         return "node points to wrong left neighbour";
@@ -111,7 +115,7 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree> &tree, 
 
     if (node.next)
     {
-        bp_tree_node next_node;
+        bp_tree_node<N> next_node;
         tree->load(&next_node, node.next);
         return validate_bp_tree_node(tree, next_node, node.next, current_offset, last_nlevel);
     }
@@ -119,9 +123,10 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree> &tree, 
     return true;
 }
 
-bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
+template<size_t N>
+bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 {
-    bp_tree_node root;
+    bp_tree_node<N> root;
     tree->load(&root, tree->info().root_offset);
 
     if (tree->info().height == 0)
@@ -145,7 +150,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
 
     while (height > 1)
     {
-        bp_tree_node node;
+        bp_tree_node<N> node;
         tree->load(&node, current_offset);
         next_row_first_offset = node.children[0].offset;
 
@@ -161,7 +166,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
 
     // Validate leaf level
     auto current_leaf_offset = next_row_first_offset;
-    bp_tree_leaf leaf;
+    bp_tree_leaf<N> leaf;
     tree->load(&leaf, current_leaf_offset);
     current_prev_offset = 0;
 
@@ -182,3 +187,5 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree)
 
     return true;
 }
+
+template bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<10>> &tree);

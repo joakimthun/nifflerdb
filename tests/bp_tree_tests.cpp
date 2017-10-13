@@ -9,10 +9,10 @@ using namespace niffler;
 
 TEST(BP_TREE, LEAF_BINARY_SEARCH)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-    bp_tree_leaf leaf;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf<10> leaf;
     EXPECT_EQ(-1, t->binary_search_record(leaf, 0));
-
+    
     leaf.records[0] = bp_tree_record{ 0, 0 };
     leaf.records[1] = bp_tree_record{ 1, 0 };
     leaf.records[2] = bp_tree_record{ 2, 0 };
@@ -41,8 +41,8 @@ TEST(BP_TREE, LEAF_BINARY_SEARCH)
 
 TEST(BP_TREE, INSERT_RECORD_AT)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-    bp_tree_leaf leaf;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf<10> leaf;
 
     t->insert_record_at(leaf, -1, 0, 0);
     EXPECT_EQ(1, leaf.num_records);
@@ -83,8 +83,8 @@ TEST(BP_TREE, INSERT_RECORD_AT)
 
 TEST(BP_TREE, INSERT_KEY_AT)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-    bp_tree_node node;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_node<10> node;
 
     t->insert_key_at(node, -1, 1, 0);
     EXPECT_EQ(1, node.num_children);
@@ -111,9 +111,9 @@ TEST(BP_TREE, INSERT_KEY_AT)
 
 TEST(BP_TREE, FIND_INSERT_INDEX_NODE)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
 
-    bp_tree_node node;
+    bp_tree_node<10> node;
     node.children[0] = bp_tree_node_child{ 0, 0 };
     node.children[1] = bp_tree_node_child{ 1, 0 };
     node.children[2] = bp_tree_node_child{ 2, 0 };
@@ -132,9 +132,9 @@ TEST(BP_TREE, FIND_INSERT_INDEX_NODE)
 
 TEST(BP_TREE, FIND_INSERT_INDEX_LEAF)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
 
-    bp_tree_leaf leaf;
+    bp_tree_leaf<10> leaf;
     leaf.records[0] = bp_tree_record{ 0, 0 };
     leaf.records[1] = bp_tree_record{ 1, 0 };
     leaf.records[2] = bp_tree_record{ 2, 0 };
@@ -153,8 +153,8 @@ TEST(BP_TREE, FIND_INSERT_INDEX_LEAF)
 
 TEST(BP_TREE, INSERT_RECORD_NON_FULL)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-    bp_tree_leaf leaf;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf<10> leaf;
 
     t->insert_record_non_full(leaf, -1, 0);
     EXPECT_EQ(1, leaf.num_records);
@@ -195,9 +195,9 @@ TEST(BP_TREE, INSERT_RECORD_NON_FULL)
 
 TEST(BP_TREE, TRANSFER_RECORDS)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
 
-    bp_tree_leaf source;
+    bp_tree_leaf<10> source;
     source.records[0] = bp_tree_record{ 1, 0 };
     source.records[1] = bp_tree_record{ 2, 0 };
     source.records[2] = bp_tree_record{ 3, 0 };
@@ -210,7 +210,7 @@ TEST(BP_TREE, TRANSFER_RECORDS)
     source.records[9] = bp_tree_record{ 10, 0 };
     source.num_records = 10;
 
-    bp_tree_leaf target;
+    bp_tree_leaf<10> target;
     t->transfer_records(source, target, 5);
 
     EXPECT_EQ(1, source.records[0].key);
@@ -240,7 +240,7 @@ TEST(BP_TREE, TRANSFER_RECORDS)
 
 TEST(BP_TREE, INSERT_NON_SPLIT)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
 
     for (auto i = 0; i < BP_TREE_ORDER; i++)
     {
@@ -251,7 +251,7 @@ TEST(BP_TREE, INSERT_NON_SPLIT)
 
 TEST(BP_TREE, INSERT_1000_KEYS)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 20)).value;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 20)).value;
     const auto num_keys = 1000;
 
     for (auto i = 0; i < num_keys; i++)
@@ -269,7 +269,7 @@ TEST(BP_TREE, INSERT_1000_KEYS)
 
 TEST(BP_TREE, INSERT_5000_RANDOM_KEYS)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 100)).value;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 100)).value;
     const auto num_keys = 5000;
     srand(99);
 
@@ -285,8 +285,8 @@ TEST(BP_TREE, INSERT_5000_RANDOM_KEYS)
 
 TEST(BP_TREE, REMOVE_RECORD_AT)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-    bp_tree_leaf leaf;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf<10> leaf;
     leaf.records[0] = bp_tree_record{ 0, 0 };
     leaf.records[1] = bp_tree_record{ 1, 0 };
     leaf.records[2] = bp_tree_record{ 2, 0 };
@@ -320,8 +320,8 @@ TEST(BP_TREE, REMOVE_RECORD_AT)
 
 TEST(BP_TREE, REMOVE_RECORD)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024)).value;
-    bp_tree_leaf leaf;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf<10> leaf;
     leaf.records[0] = bp_tree_record{ 0, 0 };
     leaf.records[1] = bp_tree_record{ 1, 0 };
     leaf.records[2] = bp_tree_record{ 2, 0 };
@@ -355,7 +355,7 @@ TEST(BP_TREE, REMOVE_RECORD)
 
 TEST(BP_TREE, REMOVE_NO_MERGE_BORROW)
 {
-    auto t = bp_tree::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
     const auto num_keys = 250;
 
     for (auto i = 0; i < num_keys; i++)

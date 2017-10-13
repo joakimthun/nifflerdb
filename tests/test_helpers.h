@@ -24,5 +24,6 @@ struct bp_tree_validation_result {
     char message[64];
 };
 
-bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree> &tree);
+template<size_t N>
+bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree);
 
