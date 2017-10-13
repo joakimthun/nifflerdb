@@ -21,7 +21,7 @@ namespace niffler {
     {
         auto t = std::unique_ptr<bp_tree<N>>(new bp_tree<N>(std::move(storage)));
 
-        t->info_.order = BP_TREE_ORDER;
+        t->info_.order = N;
         t->info_.value_size = sizeof(value);
         t->info_.key_size = sizeof(key);
         t->info_.height = 1;

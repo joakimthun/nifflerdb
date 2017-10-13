@@ -23,10 +23,6 @@ namespace niffler {
     using key = int;
     using value = int;
 
-    constexpr size_t BP_TREE_ORDER = 10;
-    constexpr size_t MIN_NUM_CHILDREN() { return BP_TREE_ORDER / 2; }
-    constexpr size_t MAX_NUM_CHILDREN() { return BP_TREE_ORDER; }
-
     struct bp_tree_info {
         size_t order = 0;
         size_t value_size = 0;
@@ -80,6 +76,9 @@ namespace niffler {
         string print() const;
         bool insert(const key& key, const value &value);
         bool remove(const key& key);
+
+        constexpr size_t MIN_NUM_CHILDREN() const { return N / 2; }
+        constexpr size_t MAX_NUM_CHILDREN() const { return N; }
 
         // Use gtest friend stuff?
         //private:

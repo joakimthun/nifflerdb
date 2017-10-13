@@ -242,7 +242,7 @@ TEST(BP_TREE, INSERT_NON_SPLIT)
 {
     auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
 
-    for (auto i = 0; i < BP_TREE_ORDER; i++)
+    for (auto i = 0u; i < t->MAX_NUM_CHILDREN(); i++)
     {
         EXPECT_EQ(true, t->insert(i, i));
         EXPECT_EQ(false, t->insert(i, i));
