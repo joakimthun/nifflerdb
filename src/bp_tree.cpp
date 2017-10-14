@@ -127,7 +127,16 @@ namespace niffler {
 
         if (leaf.num_records < min_num_records)
         {
-            assert(true && "leaf.num_records < min_num_records");
+            auto could_borrow = borrow_key(leaf);
+
+            if (!could_borrow)
+            {
+                assert(false && "merge needed");
+            }
+            else
+            {
+                save(&leaf, leaf_offset);
+            }
         }
         else
         {
@@ -271,6 +280,122 @@ namespace niffler {
             node.parent = parent;
             save(&node, children[i].offset);
         }
+    }
+
+    template<size_t N>
+    void bp_tree<N>::change_parent(offset parent_offset, const key &old_key, const key &new_key)
+    {
+        /*
+            Examples:
+            old_key = 0, new_key = 5
+            
+            Parent: [ 6, 12, 18, ... ]
+            child.key == 6, is_last_child == false
+            child.key will be set to 5
+            Parent: [ 5, 12, 18, ... ]
+
+            ------------------------------------------------------
+
+            old_key = 0, new_key = 7
+
+            Parent: [ 6, 12, 18, ... ]
+            child.key == 6, is_last_child == false
+            child.key will be set to 7
+            Parent: [ 7, 12, 18, ... ]
+        */
+
+        assert(parent_offset != 0);
+        bp_tree_node<N> parent;
+        load(&parent, parent_offset);
+        auto& child = find_node_child(parent, old_key);
+        assert(child.key > old_key);
+        const auto is_last_child = child.key == parent.children[parent.num_children - 1].key;
+
+        child.key = new_key;
+        save(&parent, parent_offset);
+
+        if (is_last_child)
+        {
+            // Traverse up the tree if we change the last key
+            change_parent(parent.parent, old_key, new_key);
+        }
+    }
+
+    template<size_t N>
+    bool bp_tree<N>::borrow_key(bp_tree_leaf<N> &borrower)
+    {
+        auto could_borrow = borrow_key(lender_side::left, borrower);
+        if (could_borrow)
+            return true;
+
+        return borrow_key(lender_side::right, borrower);
+    }
+
+    template<size_t N>
+    bool bp_tree<N>::borrow_key(lender_side from_side, bp_tree_leaf<N> &borrower)
+    {
+        /*
+        Left example
+        Start:
+                        [ 6, 12, ... ]
+            [ ..., 3, 4, 5]    [ 6, 7, 8, ... ]
+        Result:
+                        [ 5, 12, ... ]
+            [ ..., 3, 4 ]    [ 5, 6, 7, 8, ... ]
+
+        ------------------------------------------------------
+
+        Right example
+        Start:
+                        [ 6, 12, ... ]
+            [ ..., 3, 4, 5]    [ 6, 7, 8, ... ]
+        Result:
+                        [ 7, 12, ... ]
+            [ ..., 4, 5, 6]    [ 7, 8, ... ]
+        */
+
+        assert(borrower.num_records < MIN_NUM_CHILDREN());
+        const auto lender_offset = from_side == lender_side::right ? borrower.next : borrower.prev;
+        
+        if (lender_offset == 0)
+        {
+            // The borrower has no left/right neighbour
+            return false;
+        }
+
+        bp_tree_leaf<N> lender;
+        load(&lender, lender_offset);
+        assert(lender.num_records >= MIN_NUM_CHILDREN());
+
+        // If the lender don't have enough keys we can't borrow from it 
+        if (lender.num_records == MIN_NUM_CHILDREN())
+        {
+            return false;
+        }
+
+        size_t src_index;
+        size_t dest_index;
+
+        if (from_side == lender_side::right)
+        {
+            src_index = 0;
+            dest_index = borrower.num_records;
+            change_parent(borrower.parent, borrower.records[0].key, lender.records[1].key);
+        }
+        else
+        {
+            src_index = lender.num_records - 1;
+            dest_index = 0;
+            change_parent(lender.parent, lender.records[0].key, lender.records[src_index].key);
+        }
+
+        auto& src = lender.records[src_index];
+        insert_record_at(borrower, src.key, src.value, dest_index);
+
+        remove_record_at(lender, src_index);
+        save(&lender, lender_offset);
+
+        return true;
     }
 
     template<size_t N>
@@ -452,7 +577,7 @@ namespace niffler {
     }
 
     template<size_t N>
-    const bp_tree_node_child &bp_tree<N>::find_node_child(const bp_tree_node<N> &node, const key &key) const
+    bp_tree_node_child &bp_tree<N>::find_node_child(bp_tree_node<N> &node, const key &key) const
     {
         if (node.num_children == 0)
             return node.children[0];

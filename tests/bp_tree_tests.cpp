@@ -390,3 +390,31 @@ TEST(BP_TREE, REMOVE_NO_MERGE_BORROW)
     result = validate_bp_tree(t);
     EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 248;
 }
+
+TEST(BP_TREE, REMOVE_NO_MERGE)
+{
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
+    const auto num_keys = 250;
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->insert(i, i));
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
+    }
+
+    // No borrow
+    EXPECT_EQ(true, t->remove(239));
+    auto result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 239;
+
+    // Borrow left
+    EXPECT_EQ(true, t->remove(238));
+    result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 238;
+
+    // Left is @ MIN_NUM_CHILDREN -> borrow right
+    EXPECT_EQ(true, t->remove(237));
+    result = validate_bp_tree(t);
+    EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 237;
+}

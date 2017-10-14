@@ -63,6 +63,11 @@ namespace niffler {
         bp_tree_record records[N] = { 0 };
     };
 
+    enum class lender_side : uint8_t {
+        left,
+        right
+    };
+
     template<size_t N>
     class bp_tree {
     public:
@@ -86,6 +91,9 @@ namespace niffler {
         void insert_key_non_full(bp_tree_node<N> &node, const key &key, offset next_offset);
         void insert_key_at(bp_tree_node<N> &node, const key &key, offset next_offset, size_t index);
         void set_parent_ptr(bp_tree_node_child *children, size_t c_length, offset parent);
+        void change_parent(offset parent_offset, const key &old_key, const key &new_key);
+        bool borrow_key(bp_tree_leaf<N> &borrower);
+        bool borrow_key(lender_side from_side, bp_tree_leaf<N> &borrower);
 
         void transfer_children(bp_tree_node<N>  &source, bp_tree_node<N>  &target, size_t from_index);
 
@@ -103,7 +111,7 @@ namespace niffler {
         offset search_node(offset offset, const key &key) const;
         size_t find_insert_index(const bp_tree_leaf<N> &leaf, const key &key) const;
         size_t find_insert_index(const bp_tree_node<N> &node, const key &key) const;
-        const bp_tree_node_child &find_node_child(const bp_tree_node<N> &node, const key &key) const;
+        bp_tree_node_child &find_node_child(bp_tree_node<N> &node, const key &key) const;
         int64_t binary_search_record(const bp_tree_leaf<N> &leaf, const key &key);
 
         offset alloc_node(bp_tree_node<N> &node);
