@@ -90,10 +90,15 @@ namespace niffler {
         void insert_key(offset node_offset, const key &key, offset left_offset, offset right_offset);
         void insert_key_non_full(bp_tree_node<N> &node, const key &key, offset next_offset);
         void insert_key_at(bp_tree_node<N> &node, const key &key, offset next_offset, size_t index);
+        void remove_key_at(bp_tree_node<N> &source, size_t index);
         void set_parent_ptr(bp_tree_node_child *children, size_t c_length, offset parent);
+        void remove_key(offset node_offset, bp_tree_node<N> &node, const key &key);
+
         void change_parent(offset parent_offset, const key &old_key, const key &new_key);
         bool borrow_key(bp_tree_leaf<N> &borrower);
         bool borrow_key(lender_side from_side, bp_tree_leaf<N> &borrower);
+        void merge_leaf(bp_tree_leaf<N> &leaf, offset leaf_offset, bool is_last, key &index_key_to_remove);
+        void merge_leafs(bp_tree_leaf<N> &first, bp_tree_leaf<N> &second);
 
         void transfer_children(bp_tree_node<N>  &source, bp_tree_node<N>  &target, size_t from_index);
 
@@ -109,6 +114,7 @@ namespace niffler {
 
         offset search_tree(const key &key) const;
         offset search_node(offset offset, const key &key) const;
+        offset search_node(bp_tree_node<N> &node, const key &key) const;
         size_t find_insert_index(const bp_tree_leaf<N> &leaf, const key &key) const;
         size_t find_insert_index(const bp_tree_node<N> &node, const key &key) const;
         bp_tree_node_child &find_node_child(bp_tree_node<N> &node, const key &key) const;
@@ -117,12 +123,18 @@ namespace niffler {
         offset alloc_node(bp_tree_node<N> &node);
         offset alloc_leaf(bp_tree_leaf<N> &leaf);
         offset alloc(size_t size);
+        void free(bp_tree_node<N> &node, offset node_offset);
+        void free(bp_tree_leaf<N> &leaf, offset leaf_offset);
+        void free(size_t size, offset offset);
 
         offset create_leaf(offset leaf_offset, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf);
         offset create_node(offset node_offset, bp_tree_node<N> &node, bp_tree_node<N> &new_node);
 
         void print_node_level(stringstream &ss, offset node_offset) const;
         void print_leaf_level(stringstream &ss, offset leaf_offset) const;
+
+        template<class T>
+        void remove(T &prev, T &node);
 
         template<class T>
         void load(T *buffer, offset offset) const;

@@ -418,3 +418,58 @@ TEST(BP_TREE, REMOVE_NO_MERGE)
     result = validate_bp_tree(t);
     EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << 237;
 }
+
+TEST(BP_TREE, MERGE_LEAFS)
+{
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    bp_tree_leaf<10> first;
+    bp_tree_leaf<10> second;
+
+    first.records[0] = bp_tree_record{ 0, 0 };
+    first.records[1] = bp_tree_record{ 1, 0 };
+    first.records[2] = bp_tree_record{ 2, 0 };
+    first.records[3] = bp_tree_record{ 3, 0 };
+    first.records[4] = bp_tree_record{ 4, 0 };
+    second.records[0] = bp_tree_record{ 5, 0 };
+    second.records[1] = bp_tree_record{ 6, 0 };
+    second.records[2] = bp_tree_record{ 7, 0 };
+    second.records[3] = bp_tree_record{ 8, 0 };
+    second.records[4] = bp_tree_record{ 9, 0 };
+    first.num_records = 5;
+    second.num_records = 5;
+
+    t->merge_leafs(first, second);
+    EXPECT_EQ(10, first.num_records);
+    EXPECT_EQ(0, second.num_records);
+
+    EXPECT_EQ(0, first.records[0].key);
+    EXPECT_EQ(1, first.records[1].key);
+    EXPECT_EQ(2, first.records[2].key);
+    EXPECT_EQ(3, first.records[3].key);
+    EXPECT_EQ(4, first.records[4].key);
+    EXPECT_EQ(5, first.records[5].key);
+    EXPECT_EQ(6, first.records[6].key);
+    EXPECT_EQ(7, first.records[7].key);
+    EXPECT_EQ(8, first.records[8].key);
+    EXPECT_EQ(9, first.records[9].key);
+}
+
+TEST(BP_TREE, ADD_REMOVE_100)
+{
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
+    const auto num_keys = 100;
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->insert(i, i));
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
+    }
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->remove(i));
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << i;
+    }
+}

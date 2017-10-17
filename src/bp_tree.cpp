@@ -112,8 +112,17 @@ namespace niffler {
         auto parent_offset = search_tree(key);
         assert(parent_offset != 0);
 
-        auto leaf_offset = search_node(parent_offset, key);
+        bp_tree_node<N> parent;
+        load(&parent, parent_offset);
+
+        auto leaf_offset = search_node(parent, key);
         assert(leaf_offset != 0);
+
+        if (key == 8)
+        {
+            auto str = print();
+            auto xx = 10;
+        }
 
         bp_tree_leaf<N> leaf;
         load(&leaf, leaf_offset);
@@ -131,7 +140,9 @@ namespace niffler {
 
             if (!could_borrow)
             {
-                assert(false && "merge needed");
+                niffler::key index_key_to_remove;
+                merge_leaf(leaf, leaf_offset, leaf.next == 0, index_key_to_remove);
+                remove_key(parent_offset, parent, index_key_to_remove);
             }
             else
             {
@@ -271,6 +282,20 @@ namespace niffler {
     }
 
     template<size_t N>
+    void bp_tree<N>::remove_key_at(bp_tree_node<N>& source, size_t index)
+    {
+        assert(index < source.num_children);
+        assert(source.num_children > 0);
+
+        for (auto i = index; i < source.num_children - 1; i++)
+        {
+            source.children[i] = source.children[i + 1];
+        }
+
+        source.num_children--;
+    }
+
+    template<size_t N>
     void bp_tree<N>::set_parent_ptr(bp_tree_node_child *children, size_t c_length, offset parent)
     {
         bp_tree_node<N> node;
@@ -279,6 +304,46 @@ namespace niffler {
             load(&node, children[i].offset);
             node.parent = parent;
             save(&node, children[i].offset);
+        }
+    }
+
+    template<size_t N>
+    void bp_tree<N>::remove_key(offset node_offset, bp_tree_node<N> &node, const key &key)
+    {
+        const auto min_num_children = node.parent == 0 ? 1 : MIN_NUM_CHILDREN();
+        auto index_key = node.children[0].key;
+
+        const auto delete_index = find_insert_index(node, key);
+        assert(delete_index <= (node.num_children - 1));
+
+        // Remove if it's not the last child
+        if (delete_index != (node.num_children - 1)) {
+            /*
+            After child merge(invalid tree):
+                                            [ 7, 12, 18 ]
+                [ 3, 4, 5, 6, 7, 8, 9 ] [ 12, 13, 14, 15, 16, 17 ] [ X, X, X, ... ]
+
+            After key delete(valid left key):
+                                            [ 12, 18, ... ]
+                [ 3, 4, 5, 6, 7, 8, 9 ] [ 12, 13, 14, 15, 16, 17 ] [ X, X, X, ... ]
+            */
+
+            // Give the child of the deleted key to the next key
+            node.children[delete_index + 1].offset = node.children[delete_index].offset;
+            remove_key_at(node, delete_index);
+        }
+        else
+        {
+            node.num_children -= 1;
+        }
+
+        if (node.num_children < min_num_children)
+        {
+            assert(false && "merge/borrow");
+        }
+        else
+        {
+            save(&node, node_offset);
         }
     }
 
@@ -396,6 +461,50 @@ namespace niffler {
         save(&lender, lender_offset);
 
         return true;
+    }
+
+    template<size_t N>
+    void bp_tree<N>::merge_leaf(bp_tree_leaf<N> &leaf, offset leaf_offset, bool is_last, key &index_key_to_remove)
+    {
+        if (is_last)
+        {
+            // Leaf has no right neighbour, merge with prev
+            assert(leaf.prev != 0);
+            bp_tree_leaf<N> prev;
+            load(&prev, leaf.prev);
+            index_key_to_remove = prev.records[0].key;
+
+            merge_leafs(prev, leaf);
+            remove(prev, leaf);
+            save(&prev, leaf.prev);
+        }
+        else
+        {
+            // Leaf has a right neighbour, merge with next
+            assert(leaf.next != 0);
+            bp_tree_leaf<N> next;
+            load(&next, leaf.next);
+            index_key_to_remove = leaf.records[0].key;
+
+            merge_leafs(leaf, next);
+            remove(leaf, next);
+            save(&leaf, leaf_offset);
+        }
+    }
+
+    template<size_t N>
+    void bp_tree<N>::merge_leafs(bp_tree_leaf<N> &first, bp_tree_leaf<N> &second)
+    {
+        auto total_num_records = first.num_records + second.num_records;
+        assert(total_num_records <= MAX_NUM_CHILDREN());
+
+        for (auto i = first.num_records; i < total_num_records; i++)
+        {
+            first.records[i] = second.records[i - first.num_records];
+        }
+
+        first.num_records = total_num_records;
+        second.num_records = 0;
     }
 
     template<size_t N>
@@ -547,6 +656,12 @@ namespace niffler {
     }
 
     template<size_t N>
+    offset bp_tree<N>::search_node(bp_tree_node<N> &node, const key &key) const
+    {
+        return find_node_child(node, key).offset;
+    }
+
+    template<size_t N>
     size_t bp_tree<N>::find_insert_index(const bp_tree_leaf<N> &leaf, const key& key) const
     {
         for (auto i = 0u; i < leaf.num_records; i++)
@@ -642,6 +757,26 @@ namespace niffler {
         auto current_offset = info_.next_slot_offset;
         info_.next_slot_offset += size;
         return current_offset;
+    }
+
+    template<size_t N>
+    void bp_tree<N>::free(bp_tree_node<N> &node, offset node_offset)
+    {
+        info_.num_internal_nodes -= 1;
+        free(sizeof(bp_tree_node<N>), node_offset);
+    }
+
+    template<size_t N>
+    void bp_tree<N>::free(bp_tree_leaf<N> &leaf, offset leaf_offset)
+    {
+        info_.num_leaf_nodes -= 1;
+        free(sizeof(bp_tree_leaf<N>), leaf_offset);
+    }
+
+    template<size_t N>
+    void bp_tree<N>::free(size_t size, offset offset)
+    {
+        //TODO: Free this block in storage provider
     }
 
     template<size_t N>
@@ -745,6 +880,31 @@ namespace niffler {
         {
             print_leaf_level(ss, l.next);
         }
+    }
+
+    template<size_t N>
+    template<class T>
+    void bp_tree<N>::remove(T &prev, T &node)
+    {
+        /*
+            Start:
+            X <--> prev <--> node <--> Y
+
+            Result:
+            X <--> prev <--> Y
+        */
+
+        free(node, prev.next);
+        prev.next = node.next;
+        if (node.next != 0) {
+            // Point node's right neighbour's prev ptr to "prev"
+            T next;
+            load(&next, node.next);
+            next.prev = node.prev;
+            save(&next, node.next);
+        }
+
+        save(&info_, BASE_OFFSET_INFO_BLOCK);
     }
 
     template<size_t N>
