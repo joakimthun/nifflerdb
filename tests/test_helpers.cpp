@@ -127,9 +127,9 @@ template<size_t N>
 bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 {
     bp_tree_node<N> root;
-    tree->load(&root, tree->info().root_offset);
+    tree->load(&root, tree->header().root_offset);
 
-    if (tree->info().height == 0)
+    if (tree->header().height == 0)
         return "tree has no height";
 
     if (root.parent != 0)
@@ -138,12 +138,12 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
     if (root.num_children == 0)
         return "root has no children";
 
-    auto result = validate_bp_tree_keys(tree, root, tree->info().height <= 2);
+    auto result = validate_bp_tree_keys(tree, root, tree->header().height <= 2);
     if (!result.valid)
         return result;
 
-    auto height = tree->info().height;
-    auto current_parent_offset = tree->info().root_offset;
+    auto height = tree->header().height;
+    auto current_parent_offset = tree->header().root_offset;
     auto current_prev_offset = 0;
     auto current_offset = root.children[0].offset;
     auto next_row_first_offset = root.children[0].offset;

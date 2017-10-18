@@ -23,7 +23,7 @@ namespace niffler {
     using key = int;
     using value = int;
 
-    struct bp_tree_info {
+    struct bp_tree_header {
         size_t order = 0;
         size_t value_size = 0;
         size_t key_size = 0;
@@ -77,7 +77,7 @@ namespace niffler {
         static result<bp_tree<N>> load(std::unique_ptr<storage_provider> storage);
         static result<bp_tree<N>> create(std::unique_ptr<storage_provider> storage);
 
-        const bp_tree_info &info() const;
+        const bp_tree_header &header() const;
         string print() const;
         bool insert(const key& key, const value &value);
         bool remove(const key& key);
@@ -142,8 +142,7 @@ namespace niffler {
         void save(T *value, offset offset) const;
 
         std::unique_ptr<storage_provider> storage_;
-        bp_tree_info info_;
-
+        bp_tree_header header_;
     };
  
 }

@@ -7,8 +7,8 @@ namespace niffler {
     using std::tie;
     using std::stringstream;
 
-    constexpr size_t BASE_OFFSET_INFO_BLOCK = 0;
-    constexpr size_t BASE_OFFSET_DATA_BLOCK = BASE_OFFSET_INFO_BLOCK + sizeof(bp_tree_info);
+    constexpr size_t BASE_OFFSET_HEADER_BLOCK = 0;
+    constexpr size_t BASE_OFFSET_DATA_BLOCK = BASE_OFFSET_HEADER_BLOCK + sizeof(bp_tree_header);
 
     template<size_t N>
     result<bp_tree<N>> bp_tree<N>::load(std::unique_ptr<storage_provider> storage)
@@ -21,43 +21,43 @@ namespace niffler {
     {
         auto t = std::unique_ptr<bp_tree<N>>(new bp_tree<N>(std::move(storage)));
 
-        t->info_.order = N;
-        t->info_.value_size = sizeof(value);
-        t->info_.key_size = sizeof(key);
-        t->info_.height = 1;
-        t->info_.next_slot_offset = BASE_OFFSET_DATA_BLOCK;
+        t->header_.order = N;
+        t->header_.value_size = sizeof(value);
+        t->header_.key_size = sizeof(key);
+        t->header_.height = 1;
+        t->header_.next_slot_offset = BASE_OFFSET_DATA_BLOCK;
 
         bp_tree_node<N> root;
-        t->info_.root_offset = t->alloc_node(root);
+        t->header_.root_offset = t->alloc_node(root);
 
         bp_tree_leaf<N> leaf;
-        leaf.parent = t->info_.root_offset;
+        leaf.parent = t->header_.root_offset;
 
         auto leaf_offset = t->alloc_leaf(leaf);
-        t->info_.leaf_offset = leaf_offset;
+        t->header_.leaf_offset = leaf_offset;
         root.children[0].offset = leaf_offset;
         root.num_children = 1;
 
         // Save inital tree to the underlying storage
-        t->save(&t->info_, BASE_OFFSET_INFO_BLOCK);
-        t->save(&root, t->info_.root_offset);
+        t->save(&t->header_, BASE_OFFSET_HEADER_BLOCK);
+        t->save(&root, t->header_.root_offset);
         t->save(&leaf, leaf_offset);
 
         return result<bp_tree<N>>(true, std::move(t));
     }
 
     template<size_t N>
-    const bp_tree_info &bp_tree<N>::info() const
+    const bp_tree_header &bp_tree<N>::header() const
     {
-        return info_;
+        return header_;
     }
 
     template<size_t N>
     string bp_tree<N>::print() const
     {
         stringstream ss;
-        auto height = info_.height;
-        auto current_offset = info_.root_offset;
+        auto height = header_.height;
+        auto current_offset = header_.root_offset;
 
         do
         {
@@ -91,7 +91,7 @@ namespace niffler {
         if (binary_search_record(leaf, key) >= 0)
             return false;
 
-        if (leaf.num_records == info_.order)
+        if (leaf.num_records == header_.order)
         {
             bp_tree_leaf<N> new_leaf;
             insert_record_split(key, value, leaf_offset, leaf, new_leaf);
@@ -126,7 +126,7 @@ namespace niffler {
             return false;
 
         // If this is the only leaf we cant really borrow/merge so we accept any number of records
-        const auto min_num_records = info_.num_leaf_nodes == 1 ? 0 : MIN_NUM_CHILDREN();
+        const auto min_num_records = header_.num_leaf_nodes == 1 ? 0 : MIN_NUM_CHILDREN();
 
         if (leaf.num_records < min_num_records)
         {
@@ -165,18 +165,18 @@ namespace niffler {
         if (node_offset == 0)
         {
             bp_tree_node<N> root;
-            info_.root_offset = alloc_node(root);
-            info_.height++;
+            header_.root_offset = alloc_node(root);
+            header_.height++;
 
             root.num_children = 2;
             root.children[0].key = key;
             root.children[0].offset = left_offset;
             root.children[1].offset = right_offset;
 
-            save(&info_, BASE_OFFSET_INFO_BLOCK);
-            save(&root, info_.root_offset);
+            save(&header_, BASE_OFFSET_HEADER_BLOCK);
+            save(&root, header_.root_offset);
 
-            set_parent_ptr(root.children, root.num_children, info_.root_offset);
+            set_parent_ptr(root.children, root.num_children, header_.root_offset);
 
             return;
         }
@@ -184,7 +184,7 @@ namespace niffler {
         bp_tree_node<N> node;
         load(&node, node_offset);
 
-        if (node.num_children == info_.order)
+        if (node.num_children == header_.order)
         {
             bp_tree_node<N> new_node;
             auto new_node_offset = create_node(node_offset, node, new_node);
@@ -332,12 +332,12 @@ namespace niffler {
         }
 
         // If we only have one child left we make that child the new root and free the old root
-        if (node.num_children == 1 && info_.root_offset == node_offset && info_.num_internal_nodes != 1)
+        if (node.num_children == 1 && header_.root_offset == node_offset && header_.num_internal_nodes != 1)
         {
-            free(node, info_.root_offset);
-            info_.height--;
-            info_.root_offset = node.children[0].offset;
-            save(&info_, BASE_OFFSET_INFO_BLOCK);
+            free(node, header_.root_offset);
+            header_.height--;
+            header_.root_offset = node.children[0].offset;
+            save(&header_, BASE_OFFSET_HEADER_BLOCK);
             return;
         }
 
@@ -530,7 +530,7 @@ namespace niffler {
     template<size_t N>
     void bp_tree<N>::insert_record_non_full(bp_tree_leaf<N> &leaf, const key &key, const value &value)
     {
-        assert((leaf.num_records + 1) <= info_.order);
+        assert((leaf.num_records + 1) <= header_.order);
         auto dest_index = find_insert_index(leaf, key);
         insert_record_at(leaf, key, value, dest_index);
     }
@@ -554,7 +554,7 @@ namespace niffler {
     template<size_t N>
     void bp_tree<N>::insert_record_split(const key& key, const value &value, offset leaf_offset, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf)
     {
-        assert(leaf.num_records == info_.order);
+        assert(leaf.num_records == header_.order);
 
         auto new_leaf_offset = create_leaf(leaf_offset, leaf, new_leaf);
 
@@ -637,8 +637,8 @@ namespace niffler {
     template<size_t N>
     offset bp_tree<N>::search_tree(const key &key) const
     {
-        offset current_offset = info_.root_offset;
-        auto height = info_.height;
+        offset current_offset = header_.root_offset;
+        auto height = header_.height;
 
         while (height > 1)
         {
@@ -744,36 +744,36 @@ namespace niffler {
     template<size_t N>
     offset bp_tree<N>::alloc_node(bp_tree_node<N> &node)
     {
-        info_.num_internal_nodes++;
+        header_.num_internal_nodes++;
         return alloc(sizeof(bp_tree_node<N>));
     }
 
     template<size_t N>
     offset bp_tree<N>::alloc_leaf(bp_tree_leaf<N> &leaf)
     {
-        info_.num_leaf_nodes++;
+        header_.num_leaf_nodes++;
         return alloc(sizeof(bp_tree_leaf<N>));
     }
 
     template<size_t N>
     offset bp_tree<N>::alloc(size_t size)
     {
-        auto current_offset = info_.next_slot_offset;
-        info_.next_slot_offset += size;
+        auto current_offset = header_.next_slot_offset;
+        header_.next_slot_offset += size;
         return current_offset;
     }
 
     template<size_t N>
     void bp_tree<N>::free(bp_tree_node<N> &node, offset node_offset)
     {
-        info_.num_internal_nodes -= 1;
+        header_.num_internal_nodes -= 1;
         free(sizeof(bp_tree_node<N>), node_offset);
     }
 
     template<size_t N>
     void bp_tree<N>::free(bp_tree_leaf<N> &leaf, offset leaf_offset)
     {
-        info_.num_leaf_nodes -= 1;
+        header_.num_leaf_nodes -= 1;
         free(sizeof(bp_tree_leaf<N>), leaf_offset);
     }
 
@@ -811,7 +811,7 @@ namespace niffler {
             save(&old_next, new_leaf.next);
         }
 
-        save(&info_, BASE_OFFSET_INFO_BLOCK);
+        save(&header_, BASE_OFFSET_HEADER_BLOCK);
         return leaf.next;
     }
 
@@ -832,7 +832,7 @@ namespace niffler {
             save(&old_next, new_node.next);
         }
 
-        save(&info_, BASE_OFFSET_INFO_BLOCK);
+        save(&header_, BASE_OFFSET_HEADER_BLOCK);
         return node.next;
     }
 
@@ -908,14 +908,14 @@ namespace niffler {
             save(&next, node.next);
         }
 
-        save(&info_, BASE_OFFSET_INFO_BLOCK);
+        save(&header_, BASE_OFFSET_HEADER_BLOCK);
     }
 
     template<size_t N>
     template<class T>
     void bp_tree<N>::load(T *buffer, offset offset) const
     {
-        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value || std::is_same<T, bp_tree_info>::value, "T must be a node, leaf or info");
+        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value || std::is_same<T, bp_tree_header>::value, "T must be a node, leaf or header");
         storage_->load(buffer, offset, sizeof(T));
     }
 
@@ -923,7 +923,7 @@ namespace niffler {
     template<class T>
     void bp_tree<N>::save(T *value, offset offset) const
     {
-        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value || std::is_same<T, bp_tree_info>::value, "T must be a node, leaf or info");
+        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value || std::is_same<T, bp_tree_header>::value, "T must be a node, leaf or header");
         storage_->store(value, offset, sizeof(T));
     }
 
