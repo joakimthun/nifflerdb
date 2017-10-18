@@ -118,12 +118,6 @@ namespace niffler {
         auto leaf_offset = search_node(parent, key);
         assert(leaf_offset != 0);
 
-        if (key == 8)
-        {
-            auto str = print();
-            auto xx = 10;
-        }
-
         bp_tree_leaf<N> leaf;
         load(&leaf, leaf_offset);
 
@@ -335,6 +329,16 @@ namespace niffler {
         else
         {
             node.num_children -= 1;
+        }
+
+        // If we only have one child left we make that child the new root and free the old root
+        if (node.num_children == 1 && info_.root_offset == node_offset && info_.num_internal_nodes != 1)
+        {
+            free(node, info_.root_offset);
+            info_.height--;
+            info_.root_offset = node.children[0].offset;
+            save(&info_, BASE_OFFSET_INFO_BLOCK);
+            return;
         }
 
         if (node.num_children < min_num_children)
