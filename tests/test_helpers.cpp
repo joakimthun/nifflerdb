@@ -29,10 +29,10 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tre
     // e.g. only 1 key in the tree
     if (!is_root_descendant)
     {
-        if (leaf.num_records < tree->MIN_NUM_CHILDREN())
+        if (leaf.num_children < tree->MIN_NUM_CHILDREN())
             return "leaf has to few children";
 
-        if (leaf.num_records > tree->MAX_NUM_CHILDREN())
+        if (leaf.num_children > tree->MAX_NUM_CHILDREN())
             return "leaf has to many children";
     }
 
@@ -45,9 +45,9 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tre
     if (is_root_descendant && leaf_parent.num_children == 1)
         return true;
 
-    for (auto i = 0u; i < leaf.num_records - 1; i++)
+    for (auto i = 0u; i < leaf.num_children - 1; i++)
     {
-        if (leaf.records[i].key > parent_key)
+        if (leaf.children[i].key > parent_key)
         {
             return "record key to large for parent key";
         }
@@ -67,9 +67,9 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
             bp_tree_leaf<N> leaf;
             tree->load(&leaf, child.offset);
 
-            for (auto j = 0u; j < leaf.num_records; j++)
+            for (auto j = 0u; j < leaf.num_children; j++)
             {
-                if (leaf.records[j].key > child.key)
+                if (leaf.children[j].key > child.key)
                 {
                     return "child key to large for parent key";
                 }

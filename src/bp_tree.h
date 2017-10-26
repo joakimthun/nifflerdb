@@ -59,8 +59,8 @@ namespace niffler {
         offset parent = 0;
         offset next = 0;
         offset prev = 0;
-        size_t num_records = 0;
-        bp_tree_record records[N] = { 0 };
+        size_t num_children = 0;
+        bp_tree_record children[N] = { 0 };
     };
 
     enum class lender_side : uint8_t {

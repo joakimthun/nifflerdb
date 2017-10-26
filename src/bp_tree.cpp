@@ -91,11 +91,11 @@ namespace niffler {
         if (binary_search_record(leaf, key) >= 0)
             return false;
 
-        if (leaf.num_records == header_.order)
+        if (leaf.num_children == header_.order)
         {
             bp_tree_leaf<N> new_leaf;
             insert_record_split(key, value, leaf_offset, leaf, new_leaf);
-            insert_key(parent_offset, new_leaf.records[0].key, leaf_offset, leaf.next);
+            insert_key(parent_offset, new_leaf.children[0].key, leaf_offset, leaf.next);
         }
         else
         {
@@ -128,7 +128,7 @@ namespace niffler {
         // If this is the only leaf we cant really borrow/merge so we accept any number of records
         const auto min_num_records = header_.num_leaf_nodes == 1 ? 0 : MIN_NUM_CHILDREN();
 
-        if (leaf.num_records < min_num_records)
+        if (leaf.num_children < min_num_records)
         {
             auto could_borrow = borrow_key(leaf);
 
@@ -602,7 +602,7 @@ namespace niffler {
             [ ..., 4, 5, 6]    [ 7, 8, ... ]
         */
 
-        assert(borrower.num_records < MIN_NUM_CHILDREN());
+        assert(borrower.num_children < MIN_NUM_CHILDREN());
         const auto lender_offset = from_side == lender_side::right ? borrower.next : borrower.prev;
         
         if (lender_offset == 0)
@@ -613,10 +613,10 @@ namespace niffler {
 
         bp_tree_leaf<N> lender;
         load(&lender, lender_offset);
-        assert(lender.num_records >= MIN_NUM_CHILDREN());
+        assert(lender.num_children >= MIN_NUM_CHILDREN());
 
         // If the lender don't have enough keys we can't borrow from it 
-        if (lender.num_records == MIN_NUM_CHILDREN())
+        if (lender.num_children == MIN_NUM_CHILDREN())
         {
             return false;
         }
@@ -627,17 +627,17 @@ namespace niffler {
         if (from_side == lender_side::right)
         {
             src_index = 0;
-            dest_index = borrower.num_records;
-            change_parent(borrower.parent, borrower.records[0].key, lender.records[1].key);
+            dest_index = borrower.num_children;
+            change_parent(borrower.parent, borrower.children[0].key, lender.children[1].key);
         }
         else
         {
-            src_index = lender.num_records - 1;
+            src_index = lender.num_children - 1;
             dest_index = 0;
-            change_parent(lender.parent, lender.records[0].key, lender.records[src_index].key);
+            change_parent(lender.parent, lender.children[0].key, lender.children[src_index].key);
         }
 
-        auto& src = lender.records[src_index];
+        auto& src = lender.children[src_index];
         insert_record_at(borrower, src.key, src.value, dest_index);
 
         remove_record_at(lender, src_index);
@@ -655,7 +655,7 @@ namespace niffler {
             assert(leaf.prev != 0);
             bp_tree_leaf<N> prev;
             load(&prev, leaf.prev);
-            index_key_to_remove = prev.records[0].key;
+            index_key_to_remove = prev.children[0].key;
 
             merge_leafs(prev, leaf);
             remove(prev, leaf);
@@ -667,7 +667,7 @@ namespace niffler {
             assert(leaf.next != 0);
             bp_tree_leaf<N> next;
             load(&next, leaf.next);
-            index_key_to_remove = leaf.records[0].key;
+            index_key_to_remove = leaf.children[0].key;
 
             merge_leafs(leaf, next);
             remove(leaf, next);
@@ -678,16 +678,16 @@ namespace niffler {
     template<size_t N>
     void bp_tree<N>::merge_leafs(bp_tree_leaf<N> &first, bp_tree_leaf<N> &second)
     {
-        auto total_num_records = first.num_records + second.num_records;
+        auto total_num_records = first.num_children + second.num_children;
         assert(total_num_records <= MAX_NUM_CHILDREN());
 
-        for (auto i = first.num_records; i < total_num_records; i++)
+        for (auto i = first.num_children; i < total_num_records; i++)
         {
-            first.records[i] = second.records[i - first.num_records];
+            first.children[i] = second.children[i - first.num_children];
         }
 
-        first.num_records = total_num_records;
-        second.num_records = 0;
+        first.num_children = total_num_records;
+        second.num_children = 0;
     }
 
     template<size_t N>
@@ -709,7 +709,7 @@ namespace niffler {
     template<size_t N>
     void bp_tree<N>::insert_record_non_full(bp_tree_leaf<N> &leaf, const key &key, const value &value)
     {
-        assert((leaf.num_records + 1) <= header_.order);
+        assert((leaf.num_children + 1) <= header_.order);
         auto dest_index = find_insert_index(leaf, key);
         insert_record_at(leaf, key, value, dest_index);
     }
@@ -717,29 +717,29 @@ namespace niffler {
     template<size_t N>
     void bp_tree<N>::insert_record_at(bp_tree_leaf<N> &leaf, const key &key, const value &value, size_t index)
     {
-        assert(index < (leaf.num_records + 1));
+        assert(index < (leaf.num_children + 1));
 
         // Use a signed index to prevent i from wrapping on 0--
-        for (auto i = static_cast<int32_t>(leaf.num_records) - 1; i >= static_cast<int32_t>(index); i--)
+        for (auto i = static_cast<int32_t>(leaf.num_children) - 1; i >= static_cast<int32_t>(index); i--)
         {
-            leaf.records[i + 1] = leaf.records[i];
+            leaf.children[i + 1] = leaf.children[i];
         }
 
-        leaf.records[index].key = key;
-        leaf.records[index].value = value;
-        leaf.num_records++;
+        leaf.children[index].key = key;
+        leaf.children[index].value = value;
+        leaf.num_children++;
     }
 
     template<size_t N>
     void bp_tree<N>::insert_record_split(const key& key, const value &value, offset leaf_offset, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf)
     {
-        assert(leaf.num_records == header_.order);
+        assert(leaf.num_children == header_.order);
 
         auto new_leaf_offset = create_leaf(leaf_offset, leaf, new_leaf);
 
         bool key_greater_than_key_at_split;
         size_t split_index;
-        std::tie(key_greater_than_key_at_split, split_index) = find_split_index(leaf.records, leaf.num_records, key);
+        std::tie(key_greater_than_key_at_split, split_index) = find_split_index(leaf.children, leaf.num_children, key);
 
         transfer_records(leaf, new_leaf, split_index);
 
@@ -759,17 +759,17 @@ namespace niffler {
     template<size_t N>
     void bp_tree<N>::transfer_records(bp_tree_leaf<N> &source, bp_tree_leaf<N> &target, size_t from_index)
     {
-        assert(from_index < source.num_records);
+        assert(from_index < source.num_children);
 
-        for (auto i = from_index; i < source.num_records; i++)
+        for (auto i = from_index; i < source.num_children; i++)
         {
-            target.records[i - from_index] = source.records[i];
-            target.num_records++;
+            target.children[i - from_index] = source.children[i];
+            target.num_children++;
             // Not really needed, might remove
-            source.records[i] = { 0 };
+            source.children[i] = { 0 };
         }
 
-        source.num_records = from_index;
+        source.num_children = from_index;
     }
 
     template<size_t N>
@@ -786,14 +786,14 @@ namespace niffler {
     template<size_t N>
     void bp_tree<N>::remove_record_at(bp_tree_leaf<N> &source, size_t index)
     {
-        assert(index < source.num_records);
+        assert(index < source.num_children);
 
-        for (auto i = index; i < source.num_records - 1; i++)
+        for (auto i = index; i < source.num_children - 1; i++)
         {
-            source.records[i] = source.records[i + 1];
+            source.children[i] = source.children[i + 1];
         }
 
-        source.num_records--;
+        source.num_children--;
     }
 
     template<size_t N>
@@ -847,15 +847,15 @@ namespace niffler {
     template<size_t N>
     size_t bp_tree<N>::find_insert_index(const bp_tree_leaf<N> &leaf, const key& key) const
     {
-        for (auto i = 0u; i < leaf.num_records; i++)
+        for (auto i = 0u; i < leaf.num_children; i++)
         {
-            if (leaf.records[i].key > key)
+            if (leaf.children[i].key > key)
             {
                 return i;
             }
         }
 
-        return leaf.num_records;
+        return leaf.num_children;
     }
 
     template<size_t N>
@@ -894,16 +894,16 @@ namespace niffler {
     template<size_t N>
     int64_t bp_tree<N>::binary_search_record(const bp_tree_leaf<N> &leaf, const key &key)
     {
-        if (leaf.num_records == 0)
+        if (leaf.num_children == 0)
             return -1;
 
         int64_t low = 0;
-        int64_t high = static_cast<int64_t>(leaf.num_records - 1);
+        int64_t high = static_cast<int64_t>(leaf.num_children - 1);
 
         while (low <= high)
         {
             auto mid = low + (high - low) / 2;
-            auto current_key = leaf.records[mid].key;
+            auto current_key = leaf.children[mid].key;
             if (current_key == key)
                 return mid;
 
@@ -1048,10 +1048,10 @@ namespace niffler {
 
         ss << "[";
 
-        for (auto i = 0u; i < l.num_records; i++)
+        for (auto i = 0u; i < l.num_children; i++)
         {
-            ss << l.records[i].key;
-            if (i != l.num_records - 1)
+            ss << l.children[i].key;
+            if (i != l.num_children - 1)
             {
                 ss << ",";
             }

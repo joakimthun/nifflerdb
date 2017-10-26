@@ -13,16 +13,16 @@ TEST(BP_TREE, LEAF_BINARY_SEARCH)
     bp_tree_leaf<10> leaf;
     EXPECT_EQ(-1, t->binary_search_record(leaf, 0));
     
-    leaf.records[0] = bp_tree_record{ 0, 0 };
-    leaf.records[1] = bp_tree_record{ 1, 0 };
-    leaf.records[2] = bp_tree_record{ 2, 0 };
-    leaf.records[3] = bp_tree_record{ 3, 0 };
-    leaf.records[4] = bp_tree_record{ 4, 0 };
-    leaf.records[5] = bp_tree_record{ 5, 0 };
-    leaf.records[6] = bp_tree_record{ 6, 0 };
-    leaf.records[7] = bp_tree_record{ 7, 0 };
-    leaf.records[8] = bp_tree_record{ 8, 0 };
-    leaf.num_records = 9;
+    leaf.children[0] = bp_tree_record{ 0, 0 };
+    leaf.children[1] = bp_tree_record{ 1, 0 };
+    leaf.children[2] = bp_tree_record{ 2, 0 };
+    leaf.children[3] = bp_tree_record{ 3, 0 };
+    leaf.children[4] = bp_tree_record{ 4, 0 };
+    leaf.children[5] = bp_tree_record{ 5, 0 };
+    leaf.children[6] = bp_tree_record{ 6, 0 };
+    leaf.children[7] = bp_tree_record{ 7, 0 };
+    leaf.children[8] = bp_tree_record{ 8, 0 };
+    leaf.num_children = 9;
 
     EXPECT_EQ(0, t->binary_search_record(leaf, 0));
     EXPECT_EQ(1, t->binary_search_record(leaf, 1));
@@ -45,40 +45,40 @@ TEST(BP_TREE, INSERT_RECORD_AT)
     bp_tree_leaf<10> leaf;
 
     t->insert_record_at(leaf, -1, 0, 0);
-    EXPECT_EQ(1, leaf.num_records);
-    EXPECT_EQ(-1, leaf.records[0].key);
+    EXPECT_EQ(1, leaf.num_children);
+    EXPECT_EQ(-1, leaf.children[0].key);
 
     t->insert_record_at(leaf, -2, 0, 0);
-    EXPECT_EQ(2, leaf.num_records);
-    EXPECT_EQ(-2, leaf.records[0].key);
+    EXPECT_EQ(2, leaf.num_children);
+    EXPECT_EQ(-2, leaf.children[0].key);
 
     t->insert_record_at(leaf, 1, 0, 2);
-    EXPECT_EQ(3, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[2].key);
+    EXPECT_EQ(3, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[2].key);
 
     t->insert_record_at(leaf, 0, 0, 2);
-    EXPECT_EQ(4, leaf.num_records);
-    EXPECT_EQ(-2, leaf.records[0].key);
-    EXPECT_EQ(-1, leaf.records[1].key);
-    EXPECT_EQ(0, leaf.records[2].key);
-    EXPECT_EQ(1, leaf.records[3].key);
+    EXPECT_EQ(4, leaf.num_children);
+    EXPECT_EQ(-2, leaf.children[0].key);
+    EXPECT_EQ(-1, leaf.children[1].key);
+    EXPECT_EQ(0, leaf.children[2].key);
+    EXPECT_EQ(1, leaf.children[3].key);
 
     t->insert_record_at(leaf, 2, 0, 4);
-    EXPECT_EQ(5, leaf.num_records);
-    EXPECT_EQ(-2, leaf.records[0].key);
-    EXPECT_EQ(-1, leaf.records[1].key);
-    EXPECT_EQ(0, leaf.records[2].key);
-    EXPECT_EQ(1, leaf.records[3].key);
-    EXPECT_EQ(2, leaf.records[4].key);
+    EXPECT_EQ(5, leaf.num_children);
+    EXPECT_EQ(-2, leaf.children[0].key);
+    EXPECT_EQ(-1, leaf.children[1].key);
+    EXPECT_EQ(0, leaf.children[2].key);
+    EXPECT_EQ(1, leaf.children[3].key);
+    EXPECT_EQ(2, leaf.children[4].key);
 
     t->insert_record_at(leaf, -3, 0, 0);
-    EXPECT_EQ(6, leaf.num_records);
-    EXPECT_EQ(-3, leaf.records[0].key);
-    EXPECT_EQ(-2, leaf.records[1].key);
-    EXPECT_EQ(-1, leaf.records[2].key);
-    EXPECT_EQ(0, leaf.records[3].key);
-    EXPECT_EQ(1, leaf.records[4].key);
-    EXPECT_EQ(2, leaf.records[5].key);
+    EXPECT_EQ(6, leaf.num_children);
+    EXPECT_EQ(-3, leaf.children[0].key);
+    EXPECT_EQ(-2, leaf.children[1].key);
+    EXPECT_EQ(-1, leaf.children[2].key);
+    EXPECT_EQ(0, leaf.children[3].key);
+    EXPECT_EQ(1, leaf.children[4].key);
+    EXPECT_EQ(2, leaf.children[5].key);
 }
 
 TEST(BP_TREE, INSERT_KEY_AT)
@@ -135,16 +135,16 @@ TEST(BP_TREE, FIND_INSERT_INDEX_LEAF)
     auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
 
     bp_tree_leaf<10> leaf;
-    leaf.records[0] = bp_tree_record{ 0, 0 };
-    leaf.records[1] = bp_tree_record{ 1, 0 };
-    leaf.records[2] = bp_tree_record{ 2, 0 };
-    leaf.records[3] = bp_tree_record{ 3, 0 };
-    leaf.records[4] = bp_tree_record{ 4, 0 };
-    leaf.records[5] = bp_tree_record{ 5, 0 };
-    leaf.records[6] = bp_tree_record{ 6, 0 };
-    leaf.records[7] = bp_tree_record{ 7, 0 };
-    leaf.records[8] = bp_tree_record{ 9, 0 };
-    leaf.num_records = 9;
+    leaf.children[0] = bp_tree_record{ 0, 0 };
+    leaf.children[1] = bp_tree_record{ 1, 0 };
+    leaf.children[2] = bp_tree_record{ 2, 0 };
+    leaf.children[3] = bp_tree_record{ 3, 0 };
+    leaf.children[4] = bp_tree_record{ 4, 0 };
+    leaf.children[5] = bp_tree_record{ 5, 0 };
+    leaf.children[6] = bp_tree_record{ 6, 0 };
+    leaf.children[7] = bp_tree_record{ 7, 0 };
+    leaf.children[8] = bp_tree_record{ 9, 0 };
+    leaf.num_children = 9;
 
     EXPECT_EQ(9, t->find_insert_index(leaf, 10));
     EXPECT_EQ(0, t->find_insert_index(leaf, -9));
@@ -157,40 +157,40 @@ TEST(BP_TREE, INSERT_RECORD_NON_FULL)
     bp_tree_leaf<10> leaf;
 
     t->insert_record_non_full(leaf, -1, 0);
-    EXPECT_EQ(1, leaf.num_records);
-    EXPECT_EQ(-1, leaf.records[0].key);
+    EXPECT_EQ(1, leaf.num_children);
+    EXPECT_EQ(-1, leaf.children[0].key);
 
     t->insert_record_non_full(leaf, -2, 0);
-    EXPECT_EQ(2, leaf.num_records);
-    EXPECT_EQ(-2, leaf.records[0].key);
+    EXPECT_EQ(2, leaf.num_children);
+    EXPECT_EQ(-2, leaf.children[0].key);
 
     t->insert_record_non_full(leaf, 1, 0);
-    EXPECT_EQ(3, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[2].key);
+    EXPECT_EQ(3, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[2].key);
 
     t->insert_record_non_full(leaf, 0, 0);
-    EXPECT_EQ(4, leaf.num_records);
-    EXPECT_EQ(-2, leaf.records[0].key);
-    EXPECT_EQ(-1, leaf.records[1].key);
-    EXPECT_EQ(0, leaf.records[2].key);
-    EXPECT_EQ(1, leaf.records[3].key);
+    EXPECT_EQ(4, leaf.num_children);
+    EXPECT_EQ(-2, leaf.children[0].key);
+    EXPECT_EQ(-1, leaf.children[1].key);
+    EXPECT_EQ(0, leaf.children[2].key);
+    EXPECT_EQ(1, leaf.children[3].key);
 
     t->insert_record_non_full(leaf, 2, 0);
-    EXPECT_EQ(5, leaf.num_records);
-    EXPECT_EQ(-2, leaf.records[0].key);
-    EXPECT_EQ(-1, leaf.records[1].key);
-    EXPECT_EQ(0, leaf.records[2].key);
-    EXPECT_EQ(1, leaf.records[3].key);
-    EXPECT_EQ(2, leaf.records[4].key);
+    EXPECT_EQ(5, leaf.num_children);
+    EXPECT_EQ(-2, leaf.children[0].key);
+    EXPECT_EQ(-1, leaf.children[1].key);
+    EXPECT_EQ(0, leaf.children[2].key);
+    EXPECT_EQ(1, leaf.children[3].key);
+    EXPECT_EQ(2, leaf.children[4].key);
 
     t->insert_record_non_full(leaf, -3, 0);
-    EXPECT_EQ(6, leaf.num_records);
-    EXPECT_EQ(-3, leaf.records[0].key);
-    EXPECT_EQ(-2, leaf.records[1].key);
-    EXPECT_EQ(-1, leaf.records[2].key);
-    EXPECT_EQ(0, leaf.records[3].key);
-    EXPECT_EQ(1, leaf.records[4].key);
-    EXPECT_EQ(2, leaf.records[5].key);
+    EXPECT_EQ(6, leaf.num_children);
+    EXPECT_EQ(-3, leaf.children[0].key);
+    EXPECT_EQ(-2, leaf.children[1].key);
+    EXPECT_EQ(-1, leaf.children[2].key);
+    EXPECT_EQ(0, leaf.children[3].key);
+    EXPECT_EQ(1, leaf.children[4].key);
+    EXPECT_EQ(2, leaf.children[5].key);
 }
 
 TEST(BP_TREE, TRANSFER_RECORDS)
@@ -198,44 +198,44 @@ TEST(BP_TREE, TRANSFER_RECORDS)
     auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
 
     bp_tree_leaf<10> source;
-    source.records[0] = bp_tree_record{ 1, 0 };
-    source.records[1] = bp_tree_record{ 2, 0 };
-    source.records[2] = bp_tree_record{ 3, 0 };
-    source.records[3] = bp_tree_record{ 4, 0 };
-    source.records[4] = bp_tree_record{ 5, 0 };
-    source.records[5] = bp_tree_record{ 6, 0 };
-    source.records[6] = bp_tree_record{ 7, 0 };
-    source.records[7] = bp_tree_record{ 8, 0 };
-    source.records[8] = bp_tree_record{ 9, 0 };
-    source.records[9] = bp_tree_record{ 10, 0 };
-    source.num_records = 10;
+    source.children[0] = bp_tree_record{ 1, 0 };
+    source.children[1] = bp_tree_record{ 2, 0 };
+    source.children[2] = bp_tree_record{ 3, 0 };
+    source.children[3] = bp_tree_record{ 4, 0 };
+    source.children[4] = bp_tree_record{ 5, 0 };
+    source.children[5] = bp_tree_record{ 6, 0 };
+    source.children[6] = bp_tree_record{ 7, 0 };
+    source.children[7] = bp_tree_record{ 8, 0 };
+    source.children[8] = bp_tree_record{ 9, 0 };
+    source.children[9] = bp_tree_record{ 10, 0 };
+    source.num_children = 10;
 
     bp_tree_leaf<10> target;
     t->transfer_records(source, target, 5);
 
-    EXPECT_EQ(1, source.records[0].key);
-    EXPECT_EQ(2, source.records[1].key);
-    EXPECT_EQ(3, source.records[2].key);
-    EXPECT_EQ(4, source.records[3].key);
-    EXPECT_EQ(5, source.records[4].key);
-    EXPECT_EQ(0, source.records[5].key);
-    EXPECT_EQ(0, source.records[6].key);
-    EXPECT_EQ(0, source.records[7].key);
-    EXPECT_EQ(0, source.records[8].key);
-    EXPECT_EQ(0, source.records[8].key);
-    EXPECT_EQ(5, source.num_records);
+    EXPECT_EQ(1, source.children[0].key);
+    EXPECT_EQ(2, source.children[1].key);
+    EXPECT_EQ(3, source.children[2].key);
+    EXPECT_EQ(4, source.children[3].key);
+    EXPECT_EQ(5, source.children[4].key);
+    EXPECT_EQ(0, source.children[5].key);
+    EXPECT_EQ(0, source.children[6].key);
+    EXPECT_EQ(0, source.children[7].key);
+    EXPECT_EQ(0, source.children[8].key);
+    EXPECT_EQ(0, source.children[8].key);
+    EXPECT_EQ(5, source.num_children);
 
-    EXPECT_EQ(6, target.records[0].key);
-    EXPECT_EQ(7, target.records[1].key);
-    EXPECT_EQ(8, target.records[2].key);
-    EXPECT_EQ(9, target.records[3].key);
-    EXPECT_EQ(10, target.records[4].key);
-    EXPECT_EQ(0, target.records[5].key);
-    EXPECT_EQ(0, target.records[6].key);
-    EXPECT_EQ(0, target.records[7].key);
-    EXPECT_EQ(0, target.records[8].key);
-    EXPECT_EQ(0, target.records[8].key);
-    EXPECT_EQ(5, target.num_records);
+    EXPECT_EQ(6, target.children[0].key);
+    EXPECT_EQ(7, target.children[1].key);
+    EXPECT_EQ(8, target.children[2].key);
+    EXPECT_EQ(9, target.children[3].key);
+    EXPECT_EQ(10, target.children[4].key);
+    EXPECT_EQ(0, target.children[5].key);
+    EXPECT_EQ(0, target.children[6].key);
+    EXPECT_EQ(0, target.children[7].key);
+    EXPECT_EQ(0, target.children[8].key);
+    EXPECT_EQ(0, target.children[8].key);
+    EXPECT_EQ(5, target.num_children);
 }
 
 TEST(BP_TREE, INSERT_NON_SPLIT)
@@ -287,70 +287,70 @@ TEST(BP_TREE, REMOVE_RECORD_AT)
 {
     auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
     bp_tree_leaf<10> leaf;
-    leaf.records[0] = bp_tree_record{ 0, 0 };
-    leaf.records[1] = bp_tree_record{ 1, 0 };
-    leaf.records[2] = bp_tree_record{ 2, 0 };
-    leaf.records[3] = bp_tree_record{ 3, 0 };
-    leaf.records[4] = bp_tree_record{ 4, 0 };
-    leaf.records[5] = bp_tree_record{ 5, 0 };
-    leaf.records[6] = bp_tree_record{ 6, 0 };
-    leaf.records[7] = bp_tree_record{ 7, 0 };
-    leaf.records[8] = bp_tree_record{ 8, 0 };
-    leaf.records[9] = bp_tree_record{ 9, 0 };
-    leaf.num_records = 10;
+    leaf.children[0] = bp_tree_record{ 0, 0 };
+    leaf.children[1] = bp_tree_record{ 1, 0 };
+    leaf.children[2] = bp_tree_record{ 2, 0 };
+    leaf.children[3] = bp_tree_record{ 3, 0 };
+    leaf.children[4] = bp_tree_record{ 4, 0 };
+    leaf.children[5] = bp_tree_record{ 5, 0 };
+    leaf.children[6] = bp_tree_record{ 6, 0 };
+    leaf.children[7] = bp_tree_record{ 7, 0 };
+    leaf.children[8] = bp_tree_record{ 8, 0 };
+    leaf.children[9] = bp_tree_record{ 9, 0 };
+    leaf.num_children = 10;
 
     t->remove_record_at(leaf, 0);
-    EXPECT_EQ(9, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[0].key);
-    EXPECT_EQ(2, leaf.records[1].key);
-    EXPECT_EQ(9, leaf.records[8].key);
+    EXPECT_EQ(9, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[0].key);
+    EXPECT_EQ(2, leaf.children[1].key);
+    EXPECT_EQ(9, leaf.children[8].key);
 
     t->remove_record_at(leaf, 3);
-    EXPECT_EQ(8, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[0].key);
-    EXPECT_EQ(5, leaf.records[3].key);
-    EXPECT_EQ(9, leaf.records[7].key);
+    EXPECT_EQ(8, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[0].key);
+    EXPECT_EQ(5, leaf.children[3].key);
+    EXPECT_EQ(9, leaf.children[7].key);
 
     t->remove_record_at(leaf, 7);
-    EXPECT_EQ(7, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[0].key);
-    EXPECT_EQ(5, leaf.records[3].key);
-    EXPECT_EQ(8, leaf.records[6].key);
+    EXPECT_EQ(7, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[0].key);
+    EXPECT_EQ(5, leaf.children[3].key);
+    EXPECT_EQ(8, leaf.children[6].key);
 }
 
 TEST(BP_TREE, REMOVE_RECORD)
 {
     auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
     bp_tree_leaf<10> leaf;
-    leaf.records[0] = bp_tree_record{ 0, 0 };
-    leaf.records[1] = bp_tree_record{ 1, 0 };
-    leaf.records[2] = bp_tree_record{ 2, 0 };
-    leaf.records[3] = bp_tree_record{ 3, 0 };
-    leaf.records[4] = bp_tree_record{ 4, 0 };
-    leaf.records[5] = bp_tree_record{ 5, 0 };
-    leaf.records[6] = bp_tree_record{ 6, 0 };
-    leaf.records[7] = bp_tree_record{ 7, 0 };
-    leaf.records[8] = bp_tree_record{ 8, 0 };
-    leaf.records[9] = bp_tree_record{ 9, 0 };
-    leaf.num_records = 10;
+    leaf.children[0] = bp_tree_record{ 0, 0 };
+    leaf.children[1] = bp_tree_record{ 1, 0 };
+    leaf.children[2] = bp_tree_record{ 2, 0 };
+    leaf.children[3] = bp_tree_record{ 3, 0 };
+    leaf.children[4] = bp_tree_record{ 4, 0 };
+    leaf.children[5] = bp_tree_record{ 5, 0 };
+    leaf.children[6] = bp_tree_record{ 6, 0 };
+    leaf.children[7] = bp_tree_record{ 7, 0 };
+    leaf.children[8] = bp_tree_record{ 8, 0 };
+    leaf.children[9] = bp_tree_record{ 9, 0 };
+    leaf.num_children = 10;
 
     t->remove_record(leaf, 0);
-    EXPECT_EQ(9, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[0].key);
-    EXPECT_EQ(2, leaf.records[1].key);
-    EXPECT_EQ(9, leaf.records[8].key);
+    EXPECT_EQ(9, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[0].key);
+    EXPECT_EQ(2, leaf.children[1].key);
+    EXPECT_EQ(9, leaf.children[8].key);
 
     t->remove_record(leaf, 4);
-    EXPECT_EQ(8, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[0].key);
-    EXPECT_EQ(5, leaf.records[3].key);
-    EXPECT_EQ(9, leaf.records[7].key);
+    EXPECT_EQ(8, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[0].key);
+    EXPECT_EQ(5, leaf.children[3].key);
+    EXPECT_EQ(9, leaf.children[7].key);
 
     t->remove_record(leaf, 9);
-    EXPECT_EQ(7, leaf.num_records);
-    EXPECT_EQ(1, leaf.records[0].key);
-    EXPECT_EQ(5, leaf.records[3].key);
-    EXPECT_EQ(8, leaf.records[6].key);
+    EXPECT_EQ(7, leaf.num_children);
+    EXPECT_EQ(1, leaf.children[0].key);
+    EXPECT_EQ(5, leaf.children[3].key);
+    EXPECT_EQ(8, leaf.children[6].key);
 }
 
 TEST(BP_TREE, REMOVE_NO_MERGE_BORROW)
@@ -425,33 +425,33 @@ TEST(BP_TREE, MERGE_LEAFS)
     bp_tree_leaf<10> first;
     bp_tree_leaf<10> second;
 
-    first.records[0] = bp_tree_record{ 0, 0 };
-    first.records[1] = bp_tree_record{ 1, 0 };
-    first.records[2] = bp_tree_record{ 2, 0 };
-    first.records[3] = bp_tree_record{ 3, 0 };
-    first.records[4] = bp_tree_record{ 4, 0 };
-    second.records[0] = bp_tree_record{ 5, 0 };
-    second.records[1] = bp_tree_record{ 6, 0 };
-    second.records[2] = bp_tree_record{ 7, 0 };
-    second.records[3] = bp_tree_record{ 8, 0 };
-    second.records[4] = bp_tree_record{ 9, 0 };
-    first.num_records = 5;
-    second.num_records = 5;
+    first.children[0] = bp_tree_record{ 0, 0 };
+    first.children[1] = bp_tree_record{ 1, 0 };
+    first.children[2] = bp_tree_record{ 2, 0 };
+    first.children[3] = bp_tree_record{ 3, 0 };
+    first.children[4] = bp_tree_record{ 4, 0 };
+    second.children[0] = bp_tree_record{ 5, 0 };
+    second.children[1] = bp_tree_record{ 6, 0 };
+    second.children[2] = bp_tree_record{ 7, 0 };
+    second.children[3] = bp_tree_record{ 8, 0 };
+    second.children[4] = bp_tree_record{ 9, 0 };
+    first.num_children = 5;
+    second.num_children = 5;
 
     t->merge_leafs(first, second);
-    EXPECT_EQ(10, first.num_records);
-    EXPECT_EQ(0, second.num_records);
+    EXPECT_EQ(10, first.num_children);
+    EXPECT_EQ(0, second.num_children);
 
-    EXPECT_EQ(0, first.records[0].key);
-    EXPECT_EQ(1, first.records[1].key);
-    EXPECT_EQ(2, first.records[2].key);
-    EXPECT_EQ(3, first.records[3].key);
-    EXPECT_EQ(4, first.records[4].key);
-    EXPECT_EQ(5, first.records[5].key);
-    EXPECT_EQ(6, first.records[6].key);
-    EXPECT_EQ(7, first.records[7].key);
-    EXPECT_EQ(8, first.records[8].key);
-    EXPECT_EQ(9, first.records[9].key);
+    EXPECT_EQ(0, first.children[0].key);
+    EXPECT_EQ(1, first.children[1].key);
+    EXPECT_EQ(2, first.children[2].key);
+    EXPECT_EQ(3, first.children[3].key);
+    EXPECT_EQ(4, first.children[4].key);
+    EXPECT_EQ(5, first.children[5].key);
+    EXPECT_EQ(6, first.children[6].key);
+    EXPECT_EQ(7, first.children[7].key);
+    EXPECT_EQ(8, first.children[8].key);
+    EXPECT_EQ(9, first.children[9].key);
 }
 
 TEST(BP_TREE, ADD_REMOVE_100_X2)
