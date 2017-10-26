@@ -487,3 +487,23 @@ TEST(BP_TREE, ADD_REMOVE_100_X2)
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << i;
     }
 }
+
+TEST(BP_TREE, ADD_REMOVE_5000_X2)
+{
+    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 100)).value;
+    const auto num_keys = 5000;
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->insert(i, i));
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
+    }
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->remove(i)) << "removed key: " << i;
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << i;
+    }
+}
