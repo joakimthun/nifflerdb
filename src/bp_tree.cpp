@@ -317,7 +317,7 @@ namespace niffler {
                                             [ 7, 12, 18 ]
                 [ 3, 4, 5, 6, 7, 8, 9 ] [ 12, 13, 14, 15, 16, 17 ] [ X, X, X, ... ]
 
-            After key delete(valid left key):
+            After key delete(valid tree):
                                             [ 12, 18, ... ]
                 [ 3, 4, 5, 6, 7, 8, 9 ] [ 12, 13, 14, 15, 16, 17 ] [ X, X, X, ... ]
             */
@@ -338,17 +338,196 @@ namespace niffler {
             header_.height--;
             header_.root_offset = node.children[0].offset;
             save(&header_, BASE_OFFSET_HEADER_BLOCK);
+
+            bp_tree_node<N> root;
+            load(&root, header().root_offset);
+            root.parent = 0;
+            save(&root, header().root_offset);
             return;
         }
 
         if (node.num_children < min_num_children)
         {
-            assert(false && "merge/borrow");
+            auto could_borrow = borrow_key(node, node_offset);
+
+            if (!could_borrow)
+            {
+                bp_tree_node<N> parent;
+                load(&parent, node.parent);
+                merge_node(node, node_offset, node_offset == parent.children[parent.num_children - 1].offset);
+                remove_key(node.parent, parent, index_key);
+            }
+            else
+            {
+                save(&node, node_offset);
+            }
         }
         else
         {
             save(&node, node_offset);
         }
+    }
+
+    template<size_t N>
+    bool bp_tree<N>::borrow_key(bp_tree_node<N> &borrower, offset node_offset)
+    {
+        auto could_borrow = borrow_key(lender_side::left, borrower, node_offset);
+        if (could_borrow)
+            return true;
+
+        return borrow_key(lender_side::right, borrower, node_offset);
+    }
+
+    template<size_t N>
+    bool bp_tree<N>::borrow_key(lender_side from_side, bp_tree_node<N> &borrower, offset node_offset)
+    {
+        assert(borrower.num_children < MIN_NUM_CHILDREN());
+        const auto lender_offset = from_side == lender_side::right ? borrower.next : borrower.prev;
+
+        if (lender_offset == 0)
+        {
+            // The borrower has no left/right neighbour
+            return false;
+        }
+
+        bp_tree_node<N> lender;
+        load(&lender, lender_offset);
+        assert(lender.num_children >= MIN_NUM_CHILDREN());
+
+        // If the lender don't have enough keys we can't borrow from it 
+        if (lender.num_children == MIN_NUM_CHILDREN())
+        {
+            return false;
+        }
+
+        size_t src_index;
+        size_t dest_index;
+        bp_tree_node<N> parent;
+
+        auto find_parent_node_index = [](const bp_tree_node<N> &n, const key &key) {
+            for (auto i = 0u; i < n.num_children; i++)
+            {
+                if (n.children[i].key >= key)
+                    return i;
+            }
+
+            return n.num_children - 1;
+        };
+
+        /*
+        RIGHT:
+
+        Before:
+                            [ 36 ]
+            [ 18, 24, 30, 36 ] [ 42, 48, 54, 60, 66 ]
+
+        After:
+                                [ 42 ]
+            [ 18, 24, 30, 36, 42 ] [ 48, 54, 60, 66, 72 ]
+        
+        LEFT:
+
+        Before:
+                                [ 36 ]
+            [ 12, 18, 24, 30, 36 ] [ 42, 48, 54, 60, 66 ]
+
+        After:
+                           [ 30 ]
+            [ 12, 18, 24, 30] [36, 42, 48, 54 ]
+        */
+        if (from_side == lender_side::right)
+        {
+            src_index = 0;
+            dest_index = borrower.num_children;
+            load(&parent, borrower.parent);
+            const auto parent_key_index = find_parent_node_index(parent, borrower.children[borrower.num_children - 1].key);
+            parent.children[parent_key_index].key = lender.children[0].key;
+            save(&parent, borrower.parent);
+        }
+        else
+        {
+            src_index = lender.num_children - 1;
+            dest_index = 0;
+            load(&parent, lender.parent);
+            const auto parent_key_index = find_insert_index(parent, lender.children[0].key);
+            parent.children[parent_key_index].key = lender.children[src_index - 1].key;
+            save(&parent, borrower.parent);
+        }
+
+        auto& src = lender.children[src_index];
+        insert_node_at(borrower, src.key, src.offset, dest_index);
+
+        // Change the borrowed node's parent
+        bp_tree_node<N> child;
+        load(&child, lender.children[src_index].offset);
+        child.parent = node_offset;
+        save(&child, lender.children[src_index].offset);
+
+        // Remove the borrowed key from the lender
+        remove_key_at(lender, src_index);
+        save(&lender, lender_offset);
+
+        return true;
+    }
+
+    template<size_t N>
+    void bp_tree<N>::insert_node_at(bp_tree_node<N>& node, const key & key, offset offset, size_t index)
+    {
+        assert(index < (node.num_children + 1));
+
+        // Use a signed index to prevent i from wrapping on 0--
+        for (auto i = static_cast<int32_t>(node.num_children) - 1; i >= static_cast<int32_t>(index); i--)
+        {
+            node.children[i + 1] = node.children[i];
+        }
+
+        node.children[index].key = key;
+        node.children[index].offset = offset;
+        node.num_children++;
+    }
+
+    template<size_t N>
+    void bp_tree<N>::merge_node(bp_tree_node<N> &node, offset node_offset, bool is_last)
+    {
+        if (is_last)
+        {
+            // Node has no right neighbour, merge with prev
+            assert(node.prev != 0);
+            bp_tree_node<N> prev;
+            load(&prev, node.prev);
+
+            set_parent_ptr(node.children, node.num_children, node.prev);
+            merge_nodes(prev, node);
+            remove(prev, node);
+            save(&prev, node.prev);
+        }
+        else
+        {
+            // Merge with next
+            assert(node.next != 0);
+            bp_tree_node<N> next;
+            load(&next, node.next);
+
+            set_parent_ptr(next.children, next.num_children, node_offset);
+            merge_nodes(node, next);
+            remove(node, next);
+            save(&node, node_offset);
+        }
+    }
+
+    template<size_t N>
+    void bp_tree<N>::merge_nodes(bp_tree_node<N> &first, bp_tree_node<N> &second)
+    {
+        auto total_num_children = first.num_children + second.num_children;
+        assert(total_num_children <= MAX_NUM_CHILDREN());
+
+        for (auto i = first.num_children; i < total_num_children; i++)
+        {
+            first.children[i] = second.children[i - first.num_children];
+        }
+
+        first.num_children = total_num_children;
+        second.num_children = 0;
     }
 
     template<size_t N>

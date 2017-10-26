@@ -454,7 +454,7 @@ TEST(BP_TREE, MERGE_LEAFS)
     EXPECT_EQ(9, first.records[9].key);
 }
 
-TEST(BP_TREE, ADD_REMOVE_100)
+TEST(BP_TREE, ADD_REMOVE_100_X2)
 {
     auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
     const auto num_keys = 100;
@@ -468,7 +468,21 @@ TEST(BP_TREE, ADD_REMOVE_100)
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(true, t->remove(i));
+        EXPECT_EQ(true, t->remove(i)) << "removed key: " << i;
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << i;
+    }
+
+    for (auto i = 0; i < num_keys; i++)
+    {
+        EXPECT_EQ(true, t->insert(i, i));
+        auto result = validate_bp_tree(t);
+        EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
+    }
+
+    for (auto i = num_keys - 1; i >= 0; i--)
+    {
+        EXPECT_EQ(true, t->remove(i)) << "removed key: " << i;
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "removed key: " << i;
     }
