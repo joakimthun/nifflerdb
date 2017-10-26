@@ -798,7 +798,7 @@ namespace niffler {
 
     template<size_t N>
     template<class T>
-    tuple<bool, size_t> bp_tree<N>::find_split_index(const T * arr, size_t arr_len, const key & key)
+    tuple<bool, size_t> bp_tree<N>::find_split_index(const T *arr, size_t arr_len, const key & key)
     {
         static_assert(std::is_same<T, bp_tree_record>::value || std::is_same<T, bp_tree_node_child>::value, "T must be a record or a node child");
 
@@ -1069,6 +1069,8 @@ namespace niffler {
     template<class T>
     void bp_tree<N>::remove(T &prev, T &node)
     {
+        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value, "T must be a node or a leaf");
+
         /*
             Start:
             X <--> prev <--> node <--> Y
