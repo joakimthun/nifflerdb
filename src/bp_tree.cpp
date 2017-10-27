@@ -187,7 +187,7 @@ namespace niffler {
         if (node.num_children == header_.order)
         {
             bp_tree_node<N> new_node;
-            auto new_node_offset = create_node(node_offset, node, new_node);
+            auto new_node_offset = create(node_offset, node, new_node, [this](auto n) { return alloc_node(n); });
 
             bool key_greater_than_key_at_split;
             size_t split_index;
@@ -735,7 +735,7 @@ namespace niffler {
     {
         assert(leaf.num_children == header_.order);
 
-        auto new_leaf_offset = create_leaf(leaf_offset, leaf, new_leaf);
+        auto new_leaf_offset = create(leaf_offset, leaf, new_leaf, [this](auto l) { return alloc_leaf(l); });
 
         bool key_greater_than_key_at_split;
         size_t split_index;
@@ -963,49 +963,30 @@ namespace niffler {
     }
 
     template<size_t N>
-    offset bp_tree<N>::create_leaf(offset leaf_offset, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf)
+    template<class T, class NodeAllocator>
+    offset bp_tree<N>::create(offset node_offset, T & node, T & new_node, NodeAllocator node_allocator)
     {
+        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value, "T must be a node or a leaf");
+
         /*
-        Result if leaf has a right neighbour:
 
-                         Parent
+        Result if node/leaf has a right neighbour:
 
-            X <---> leaf <---> new_leaf <---> X
+                    Parent
+
+        X <---> leaf <---> new_leaf <---> X
+
         */
 
-        // Insert new_leaf to the right of leaf
-        new_leaf.parent = leaf.parent;
-        new_leaf.next = leaf.next;
-        new_leaf.prev = leaf_offset;
-
-        // Create space for new_leaf and point leaf to it
-        leaf.next = alloc_leaf(new_leaf);
-
-        // If we have a right neighbour point its prev pointer to new_leaf
-        if (new_leaf.next != 0)
-        {
-            bp_tree_leaf<N> old_next;
-            load(&old_next, new_leaf.next);
-            old_next.prev = leaf.next;
-            save(&old_next, new_leaf.next);
-        }
-
-        save(&header_, BASE_OFFSET_HEADER_BLOCK);
-        return leaf.next;
-    }
-
-    template<size_t N>
-    offset bp_tree<N>::create_node(offset node_offset, bp_tree_node<N> &node, bp_tree_node<N> &new_node)
-    {
-        // Same concept as create_leaf
+        // Insert new_node to the right of node/leaf
         new_node.parent = node.parent;
         new_node.next = node.next;
         new_node.prev = node_offset;
-        node.next = alloc_node(new_node);
+        node.next = node_allocator(new_node);
 
         if (new_node.next != 0)
         {
-            bp_tree_leaf<N> old_next;
+            T old_next;
             load(&old_next, new_node.next);
             old_next.prev = node.next;
             save(&old_next, new_node.next);

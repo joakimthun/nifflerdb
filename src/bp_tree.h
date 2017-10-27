@@ -132,8 +132,8 @@ namespace niffler {
         void free(bp_tree_leaf<N> &leaf, offset leaf_offset);
         void free(size_t size, offset offset);
 
-        offset create_leaf(offset leaf_offset, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf);
-        offset create_node(offset node_offset, bp_tree_node<N> &node, bp_tree_node<N> &new_node);
+        template<class T, class NodeAllocator>
+        offset create(offset node_offset, T &node, T &new_node, NodeAllocator node_allocator);
 
         void print_node_level(stringstream &ss, offset node_offset) const;
         void print_leaf_level(stringstream &ss, offset leaf_offset) const;
