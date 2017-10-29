@@ -11,14 +11,28 @@ namespace niffler {
     constexpr size_t BASE_OFFSET_DATA_BLOCK = BASE_OFFSET_HEADER_BLOCK + sizeof(bp_tree_header);
 
     template<size_t N>
+    constexpr void bp_tree<N>::assert_sizes()
+    {
+        static_assert(sizeof(bp_tree_header) == 36, "sizeof(bp_tree_header) != 36");
+        static_assert(sizeof(bp_tree_node_child) == 8, "sizeof(bp_tree_node_child) != 8");
+        static_assert(sizeof(bp_tree_record) == 8, "sizeof(bp_tree_record) != 8");
+        static_assert(sizeof(bp_tree_node<N>) == (16 + sizeof(bp_tree_node_child) * N), "wrong size: bp_tree_node<N>");
+        static_assert(sizeof(bp_tree_leaf<N>) == (16 + sizeof(bp_tree_record) * N), "wrong size: bp_tree_leaf<N>");
+    }
+
+    template<size_t N>
     result<bp_tree<N>> bp_tree<N>::load(std::unique_ptr<storage_provider> storage)
     {
+        // TODO: Remove the size and padding requirements with some kind of serialization
+        bp_tree<N>::assert_sizes();
         return false;
     }
 
     template<size_t N>
     result<bp_tree<N>> bp_tree<N>::create(std::unique_ptr<storage_provider> storage)
     {
+        // TODO: Remove the size and padding requirements with some kind of serialization
+        bp_tree<N>::assert_sizes();
         auto t = std::unique_ptr<bp_tree<N>>(new bp_tree<N>(std::move(storage)));
 
         t->header_.order = N;

@@ -74,6 +74,7 @@ namespace niffler {
         bp_tree() = delete;
         bp_tree(std::unique_ptr<storage_provider> storage);
 
+        static constexpr void assert_sizes();
         static result<bp_tree<N>> load(std::unique_ptr<storage_provider> storage);
         static result<bp_tree<N>> create(std::unique_ptr<storage_provider> storage);
 
