@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <memory>
 #include <tuple>
 #include <type_traits>
@@ -8,9 +7,9 @@
 #include <sstream>
 #include <stdint.h>
 
-#include "files.h"
+#include "define.h"
 #include "util.h"
-#include "storage_providers.h"
+#include "storage_provider.h"
 
 namespace niffler {
 
@@ -19,7 +18,6 @@ namespace niffler {
     using std::string;
     using std::stringstream;
 
-    using offset = std::size_t;
     using key = int;
     using value = int;
 
@@ -80,6 +78,7 @@ namespace niffler {
 
         const bp_tree_header &header() const;
         string print() const;
+        storage_provider &storage();
         bool insert(const key& key, const value &value);
         bool remove(const key& key);
 
@@ -88,6 +87,9 @@ namespace niffler {
 
         // Use gtest friend stuff?
         //private:
+        bool insert_internal(const key& key, const value &value);
+        bool remove_internal(const key& key);
+
         void insert_key(offset node_offset, const key &key, offset left_offset, offset right_offset);
         void insert_key_non_full(bp_tree_node<N> &node, const key &key, offset next_offset);
         void insert_key_at(bp_tree_node<N> &node, const key &key, offset next_offset, size_t index);

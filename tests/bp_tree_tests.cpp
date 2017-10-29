@@ -1,15 +1,20 @@
 #include <gtest\gtest.h>
 #include <stdlib.h>
 
-#include "storage_providers.h"
+#include "storage_provider.h"
 #include "bp_tree.h"
 #include "test_helpers.h"
 
 using namespace niffler;
 
+std::unique_ptr<storage_provider> create_storage_provider()
+{
+    return std::make_unique<storage_provider>(0, "files/test.ndb", file_mode::write_update);
+}
+
 TEST(BP_TREE, LEAF_BINARY_SEARCH)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     bp_tree_leaf<10> leaf;
     EXPECT_EQ(-1, t->binary_search_record(leaf, 0));
     
@@ -41,7 +46,7 @@ TEST(BP_TREE, LEAF_BINARY_SEARCH)
 
 TEST(BP_TREE, INSERT_RECORD_AT)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     bp_tree_leaf<10> leaf;
 
     t->insert_record_at(leaf, -1, 0, 0);
@@ -83,7 +88,7 @@ TEST(BP_TREE, INSERT_RECORD_AT)
 
 TEST(BP_TREE, INSERT_KEY_AT)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     bp_tree_node<10> node;
 
     t->insert_key_at(node, -1, 1, 0);
@@ -111,7 +116,7 @@ TEST(BP_TREE, INSERT_KEY_AT)
 
 TEST(BP_TREE, FIND_INSERT_INDEX_NODE)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
 
     bp_tree_node<10> node;
     node.children[0] = bp_tree_node_child{ 0, 0 };
@@ -132,7 +137,7 @@ TEST(BP_TREE, FIND_INSERT_INDEX_NODE)
 
 TEST(BP_TREE, FIND_INSERT_INDEX_LEAF)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
 
     bp_tree_leaf<10> leaf;
     leaf.children[0] = bp_tree_record{ 0, 0 };
@@ -153,7 +158,7 @@ TEST(BP_TREE, FIND_INSERT_INDEX_LEAF)
 
 TEST(BP_TREE, INSERT_RECORD_NON_FULL)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     bp_tree_leaf<10> leaf;
 
     t->insert_record_non_full(leaf, -1, 0);
@@ -195,7 +200,7 @@ TEST(BP_TREE, INSERT_RECORD_NON_FULL)
 
 TEST(BP_TREE, TRANSFER_RECORDS)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
 
     bp_tree_leaf<10> source;
     source.children[0] = bp_tree_record{ 1, 0 };
@@ -240,7 +245,7 @@ TEST(BP_TREE, TRANSFER_RECORDS)
 
 TEST(BP_TREE, INSERT_NON_SPLIT)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
 
     for (auto i = 0u; i < t->MAX_NUM_CHILDREN(); i++)
     {
@@ -251,8 +256,8 @@ TEST(BP_TREE, INSERT_NON_SPLIT)
 
 TEST(BP_TREE, INSERT_1000_KEYS)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 20)).value;
-    const auto num_keys = 1000;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
+    const auto num_keys = 25;
 
     for (auto i = 0; i < num_keys; i++)
     {
@@ -267,10 +272,10 @@ TEST(BP_TREE, INSERT_1000_KEYS)
     }
 }
 
-TEST(BP_TREE, INSERT_5000_RANDOM_KEYS)
+TEST(BP_TREE, INSERT_1000_RANDOM_KEYS)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 100)).value;
-    const auto num_keys = 5000;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
+    const auto num_keys = 1000;
     srand(99);
 
     for (auto i = 0; i < num_keys; i++)
@@ -285,7 +290,7 @@ TEST(BP_TREE, INSERT_5000_RANDOM_KEYS)
 
 TEST(BP_TREE, REMOVE_RECORD_AT)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     bp_tree_leaf<10> leaf;
     leaf.children[0] = bp_tree_record{ 0, 0 };
     leaf.children[1] = bp_tree_record{ 1, 0 };
@@ -320,7 +325,7 @@ TEST(BP_TREE, REMOVE_RECORD_AT)
 
 TEST(BP_TREE, REMOVE_RECORD)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     bp_tree_leaf<10> leaf;
     leaf.children[0] = bp_tree_record{ 0, 0 };
     leaf.children[1] = bp_tree_record{ 1, 0 };
@@ -355,7 +360,7 @@ TEST(BP_TREE, REMOVE_RECORD)
 
 TEST(BP_TREE, REMOVE_NO_MERGE_BORROW)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     const auto num_keys = 250;
 
     for (auto i = 0; i < num_keys; i++)
@@ -393,7 +398,7 @@ TEST(BP_TREE, REMOVE_NO_MERGE_BORROW)
 
 TEST(BP_TREE, REMOVE_NO_MERGE)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     const auto num_keys = 250;
 
     for (auto i = 0; i < num_keys; i++)
@@ -421,7 +426,7 @@ TEST(BP_TREE, REMOVE_NO_MERGE)
 
 TEST(BP_TREE, MERGE_LEAFS)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     bp_tree_leaf<10> first;
     bp_tree_leaf<10> second;
 
@@ -456,7 +461,7 @@ TEST(BP_TREE, MERGE_LEAFS)
 
 TEST(BP_TREE, ADD_REMOVE_100_X2)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 10)).value;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
     const auto num_keys = 100;
 
     for (auto i = 0; i < num_keys; i++)
@@ -488,10 +493,10 @@ TEST(BP_TREE, ADD_REMOVE_100_X2)
     }
 }
 
-TEST(BP_TREE, ADD_REMOVE_5000)
+TEST(BP_TREE, ADD_REMOVE_1000)
 {
-    auto t = bp_tree<10>::create(std::make_unique<mem_storage_provider>(1024 * 100)).value;
-    const auto num_keys = 5000;
+    auto t = bp_tree<10>::create(create_storage_provider()).value;
+    const auto num_keys = 1000;
 
     for (auto i = 0; i < num_keys; i++)
     {

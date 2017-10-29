@@ -24,4 +24,5 @@ namespace niffler {
         bool ok() const;
     };
 
+    int fsync(FILE *file);
 }

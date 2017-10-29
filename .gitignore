@@ -236,5 +236,8 @@ $RECYCLE.BIN/
 *.opendb
 src/tests/test_files/e.bmp
 
+# Test files
+tests/files
+
 # Gtest MSVC
 !/lib/gtest-release-1.8.0/x86

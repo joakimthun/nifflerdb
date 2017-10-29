@@ -31,6 +31,9 @@ namespace niffler {
     template<size_t N>
     result<bp_tree<N>> bp_tree<N>::create(std::unique_ptr<storage_provider> storage)
     {
+        if(!storage->ok())
+            return result<bp_tree<N>>(false, nullptr);
+
         // TODO: Remove the size and padding requirements with some kind of serialization
         bp_tree<N>::assert_sizes();
         auto t = std::unique_ptr<bp_tree<N>>(new bp_tree<N>(std::move(storage)));
@@ -57,7 +60,8 @@ namespace niffler {
         t->save(&root, t->header_.root_offset);
         t->save(&leaf, leaf_offset);
 
-        return result<bp_tree<N>>(true, std::move(t));
+        auto sync_result = t->storage().sync();
+        return result<bp_tree<N>>(sync_result, std::move(t));
     }
 
     template<size_t N>
@@ -90,7 +94,38 @@ namespace niffler {
     }
 
     template<size_t N>
+    storage_provider &bp_tree<N>::storage()
+    {
+        return *storage_;
+    }
+
+    template<size_t N>
     bool bp_tree<N>::insert(const key &key, const value &value)
+    {
+        if (insert_internal(key, value))
+            return storage_->sync();
+
+        return false;
+    }
+
+    template<size_t N>
+    bool bp_tree<N>::remove(const key &key)
+    {
+        if (remove_internal(key))
+            return storage_->sync();
+
+        return false;
+    }
+
+    template<size_t N>
+    bp_tree<N>::bp_tree(std::unique_ptr<storage_provider> storage)
+        :
+        storage_(std::move(storage))
+    {
+    }
+
+    template<size_t N>
+    bool bp_tree<N>::insert_internal(const key &key, const value &value)
     {
         auto parent_offset = search_tree(key);
         assert(parent_offset != 0);
@@ -121,7 +156,7 @@ namespace niffler {
     }
 
     template<size_t N>
-    bool bp_tree<N>::remove(const key &key)
+    bool bp_tree<N>::remove_internal(const key &key)
     {
         auto parent_offset = search_tree(key);
         assert(parent_offset != 0);
@@ -163,13 +198,6 @@ namespace niffler {
         }
 
         return true;
-    }
-
-    template<size_t N>
-    bp_tree<N>::bp_tree(std::unique_ptr<storage_provider> storage)
-        :
-        storage_(std::move(storage))
-    {
     }
 
     template<size_t N>

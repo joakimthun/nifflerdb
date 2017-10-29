@@ -2,6 +2,14 @@
 
 #include <string.h>
 
+#if (defined _WIN32 || defined __WIN32__)
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <io.h>
+
+#endif
+
 namespace niffler {
 
     const char *get_file_mode(file_mode mode)
@@ -15,11 +23,11 @@ namespace niffler {
         case file_mode::append:
             return "ab";
         case file_mode::read_update:
-            return "r+b";
+            return "rb+";
         case file_mode::write_update:
-            return "w+b";
+            return "wb+";
         case file_mode::append_update:
-            return "a+b";
+            return "ab+";
         default:
             return "";
         }
@@ -27,7 +35,7 @@ namespace niffler {
 
     file_handle::file_handle(const char *path, file_mode mode)
     {
-        strcpy_s(file_path, FILE_PATH_BUFFER_SIZE, file_path);
+        strcpy_s(file_path, FILE_PATH_BUFFER_SIZE, path);
         fopen_s(&file, file_path, get_file_mode(mode));
     }
 
@@ -41,5 +49,23 @@ namespace niffler {
     {
         return file != nullptr;
     }
+
+#if (defined _WIN32 || defined __WIN32__)
+
+    int fsync(FILE *file)
+    {
+        auto handle = (HANDLE)_get_osfhandle(_fileno(file));
+        if (handle == INVALID_HANDLE_VALUE)
+            return -1;
+
+        if (!FlushFileBuffers(handle))
+            return -1;
+
+        return 0;
+    }
+
+#else
+# error "niffler::fsync not implemented"
+#endif
 
 }

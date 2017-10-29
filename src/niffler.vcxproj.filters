@@ -21,7 +21,7 @@
     <ClCompile Include="files.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="storage_providers.cpp">
+    <ClCompile Include="storage_provider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,7 +35,10 @@
     <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="storage_providers.h">
+    <ClInclude Include="storage_provider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="define.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
