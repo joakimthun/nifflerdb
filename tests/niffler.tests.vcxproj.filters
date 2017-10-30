@@ -18,10 +18,13 @@
     <ClCompile Include="tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bp_tree_tests.cpp">
+    <ClCompile Include="test_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_helpers.cpp">
+    <ClCompile Include="bp_tree_10_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bp_tree_default_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

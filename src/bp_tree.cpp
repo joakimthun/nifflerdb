@@ -1132,4 +1132,5 @@ namespace niffler {
     }
 
     template class bp_tree<10>;
+    template class bp_tree<DEFAULT_TREE_ORDER>;
 }

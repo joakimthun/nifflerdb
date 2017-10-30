@@ -189,3 +189,4 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 }
 
 template bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<10>> &tree);
+template bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<DEFAULT_TREE_ORDER>> &tree);

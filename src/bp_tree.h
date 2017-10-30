@@ -61,6 +61,8 @@ namespace niffler {
         bp_tree_record children[N] = { 0 };
     };
 
+    constexpr size_t DEFAULT_TREE_ORDER = (PAGE_SIZE - 16) / sizeof(bp_tree_node_child);
+
     enum class lender_side : uint8_t {
         left,
         right

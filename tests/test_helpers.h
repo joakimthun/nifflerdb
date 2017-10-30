@@ -27,3 +27,8 @@ struct bp_tree_validation_result {
 template<size_t N>
 bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree);
 
+inline std::unique_ptr<storage_provider> create_storage_provider(const char *file_path)
+{
+    return std::make_unique<storage_provider>(0, file_path, file_mode::write_update);
+}
+
