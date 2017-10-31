@@ -493,7 +493,7 @@ namespace niffler {
             load(&parent, lender.parent);
             const auto parent_key_index = find_insert_index(parent, lender.children[0].key);
             parent.children[parent_key_index].key = lender.children[src_index - 1].key;
-            save(&parent, borrower.parent);
+            save(&parent, lender.parent);
         }
 
         auto& src = lender.children[src_index];
