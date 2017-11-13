@@ -211,11 +211,11 @@ namespace niffler {
                     load(&l, leaf.next);
                     bp_tree_node<N> p;
                     load(&p, l.parent);
-                    remove_key(l.parent, p, index_key_to_remove, true, offset_to_delete);
+                    remove_key(l.parent, p, index_key_to_remove, offset_to_delete);
                 }
                 else
                 {
-                  remove_key(parent_offset, parent, index_key_to_remove, false, offset_to_delete);
+                  remove_key(parent_offset, parent, index_key_to_remove, offset_to_delete);
                 }
             }
             else
@@ -375,7 +375,7 @@ namespace niffler {
     }
 
     template<size_t N>
-    void bp_tree<N>::remove_key(offset node_offset, bp_tree_node<N> &node, const key &key, bool right_del, offset offset_to_delete)
+    void bp_tree<N>::remove_key(offset node_offset, bp_tree_node<N> &node, const key &key, offset offset_to_delete)
     {
         const auto min_num_children = node.parent == 0 ? 1 : MIN_NUM_CHILDREN();
         auto index_key = node.children[0].key;
@@ -434,13 +434,13 @@ namespace niffler {
                     load(&n, node.next);
                     bp_tree_node<N> p;
                     load(&p, n.parent);
-                    remove_key(n.parent, p, index_key, true, offset_to_delete);
+                    remove_key(n.parent, p, index_key, offset_to_delete);
                 }
                 else
                 {
                     bp_tree_node<N> parent;
                     load(&parent, parent_offset);
-                    remove_key(parent_offset, parent, index_key, false, offset_to_delete);
+                    remove_key(parent_offset, parent, index_key, offset_to_delete);
                 }
             }
             else
