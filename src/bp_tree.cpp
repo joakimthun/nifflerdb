@@ -510,7 +510,7 @@ namespace niffler {
             const auto has_same_parent = lender.parent == borrower.parent;
             if (!has_same_parent)
             {
-                promote_larger_key(lender.children[src_index].key, node_offset, borrower.parent, true);
+                promote_larger_key(lender.children[src_index].key, node_offset, borrower.parent);
             }
 
             load(&parent, borrower.parent);
@@ -526,7 +526,7 @@ namespace niffler {
             const auto has_same_parent = lender.parent == borrower.parent;
             if (!has_same_parent)
             {
-                promote_smaller_key(lender.children[src_index - 1].key, lender_offset, lender.parent, true);
+                promote_smaller_key(lender.children[src_index - 1].key, lender_offset, lender.parent);
             }
 
             load(&parent, lender.parent);
@@ -605,7 +605,7 @@ namespace niffler {
             {
                 bp_tree_node<N> next_parent;
                 load(&next_parent, next.parent);
-                promote_larger_key(next_parent.children[0].key, node_offset, node.parent, true);
+                promote_larger_key(next_parent.children[0].key, node_offset, node.parent);
             }
 
             set_parent_ptr(next.children, next.num_children, node_offset);
@@ -789,7 +789,7 @@ namespace niffler {
             {
                 bp_tree_node<N> next_parent;
                 load(&next_parent, next.parent);
-                promote_larger_key(next_parent.children[0].key, leaf_offset, leaf.parent, true);
+                promote_larger_key(next_parent.children[0].key, leaf_offset, leaf.parent);
             }
 
             merge_leafs(leaf, next);
@@ -922,7 +922,7 @@ namespace niffler {
     }
 
     template<size_t N>
-    void bp_tree<N>::promote_larger_key(const key &key_to_promote, offset node_offset, offset parent_offset, bool promote_parent)
+    void bp_tree<N>::promote_larger_key(const key &key_to_promote, offset node_offset, offset parent_offset)
     {
         bp_tree_node<N> parent;
         load(&parent, parent_offset);
@@ -949,12 +949,12 @@ namespace niffler {
 
         if (parent.parent)
         {
-            promote_larger_key(key_to_promote, parent_offset, parent.parent, false);
+            promote_larger_key(key_to_promote, parent_offset, parent.parent);
         }
     }
 
     template<size_t N>
-    void bp_tree<N>::promote_smaller_key(const key & key_to_promote, offset node_offset, offset parent_offset, bool promote_parent)
+    void bp_tree<N>::promote_smaller_key(const key & key_to_promote, offset node_offset, offset parent_offset)
     {
         bp_tree_node<N> parent;
         load(&parent, parent_offset);
@@ -996,7 +996,7 @@ namespace niffler {
 
         if (parent.parent)
         {
-            promote_smaller_key(key_to_promote, parent_offset, parent.parent, false);
+            promote_smaller_key(key_to_promote, parent_offset, parent.parent);
         }
     }
 

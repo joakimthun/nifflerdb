@@ -125,8 +125,8 @@ namespace niffler {
         bool remove_record(bp_tree_leaf<N> &source, const key &key);
         void remove_record_at(bp_tree_leaf<N> &source, size_t index);
 
-        void promote_larger_key(const key &key_to_promote, offset node_offset, offset parent_offset, bool promote_parent);
-        void promote_smaller_key(const key &key_to_promote, offset node_offset, offset parent_offset, bool promote_parent);
+        void promote_larger_key(const key &key_to_promote, offset node_offset, offset parent_offset);
+        void promote_smaller_key(const key &key_to_promote, offset node_offset, offset parent_offset);
 
         template<class T>
         tuple<bool, size_t> find_split_index(const T *arr, size_t arr_len, const key &key);
