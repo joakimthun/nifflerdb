@@ -201,21 +201,16 @@ namespace niffler {
 
             if (!could_borrow)
             {
-                niffler::key index_key_to_remove;
-                offset offset_to_delete;
-                auto diff_p = merge_leaf(leaf, leaf_offset, leaf.next == 0, parent, index_key_to_remove, offset_to_delete);
+                auto merge_result = merge_leaf(leaf, leaf_offset, leaf.next == 0);
 
-                if (diff_p)
+                if (merge_result.parent_offset != parent_offset)
                 {
-                    bp_tree_leaf<N> l;
-                    load(&l, leaf.next);
-                    bp_tree_node<N> p;
-                    load(&p, l.parent);
-                    remove_key(l.parent, p, index_key_to_remove, offset_to_delete);
+                    load(&parent, merge_result.parent_offset);
+                    remove_by_offset(merge_result.parent_offset, parent, merge_result.offset_to_delete);
                 }
                 else
                 {
-                  remove_key(parent_offset, parent, index_key_to_remove, offset_to_delete);
+                    remove_by_offset(parent_offset, parent, merge_result.offset_to_delete);
                 }
             }
             else
@@ -375,10 +370,9 @@ namespace niffler {
     }
 
     template<size_t N>
-    void bp_tree<N>::remove_key(offset node_offset, bp_tree_node<N> &node, const key &key, offset offset_to_delete)
+    void bp_tree<N>::remove_by_offset(offset node_offset, bp_tree_node<N> &node, offset offset_to_delete)
     {
         const auto min_num_children = node.parent == 0 ? 1 : MIN_NUM_CHILDREN();
-        auto index_key = node.children[0].key;
 
         auto delete_index = 0u;
         auto delete_index_set = false;
@@ -424,24 +418,11 @@ namespace niffler {
 
             if (!could_borrow)
             {
-                auto parent_offset = node.parent;
-                offset offset_to_delete;
-                auto diff_p = merge_node(node, node_offset, node.next == 0, offset_to_delete);
+                auto merge_result = merge_node(node, node_offset, node.next == 0);
 
-                if (diff_p)
-                {
-                    bp_tree_node<N> n;
-                    load(&n, node.next);
-                    bp_tree_node<N> p;
-                    load(&p, n.parent);
-                    remove_key(n.parent, p, index_key, offset_to_delete);
-                }
-                else
-                {
-                    bp_tree_node<N> parent;
-                    load(&parent, parent_offset);
-                    remove_key(parent_offset, parent, index_key, offset_to_delete);
-                }
+                bp_tree_node<N> parent;
+                load(&parent, merge_result.parent_offset);
+                remove_by_offset(merge_result.parent_offset, parent, merge_result.offset_to_delete);
             }
             else
             {
@@ -587,15 +568,19 @@ namespace niffler {
     }
 
     template<size_t N>
-    bool bp_tree<N>::merge_node(bp_tree_node<N> &node, offset node_offset, bool is_last, offset &offset_to_delete)
+    merge_result bp_tree<N>::merge_node(bp_tree_node<N> &node, offset node_offset, bool is_last)
     {
-        auto ret = false;
+        merge_result result = { 0 };
 
         if (is_last)
         {
             // Node has no right neighbour, merge with prev
             assert(node.prev != 0);
-            offset_to_delete = node_offset;
+
+            result.parent_offset = node.parent;
+            result.offset_to_delete = node_offset;
+
+
             bp_tree_node<N> prev;
             load(&prev, node.prev);
 
@@ -608,15 +593,16 @@ namespace niffler {
         {
             // Merge with next
             assert(node.next != 0);
-            offset_to_delete = node.next;
+
             bp_tree_node<N> next;
             load(&next, node.next);
+
+            result.parent_offset = next.parent;
+            result.offset_to_delete = node.next;
 
             const auto has_same_parent = node.parent == next.parent;
             if (!has_same_parent)
             {
-                ret = true;
-
                 bp_tree_node<N> next_parent;
                 load(&next_parent, next.parent);
                 promote_larger_key(next_parent.children[0].key, node_offset, node.parent, true);
@@ -628,7 +614,7 @@ namespace niffler {
             save(&node, node_offset);
         }
 
-        return ret;
+        return result;
     }
 
     template<size_t N>
@@ -768,18 +754,20 @@ namespace niffler {
     }
 
     template<size_t N>
-    bool bp_tree<N>::merge_leaf(bp_tree_leaf<N> &leaf, offset leaf_offset, bool is_last, bp_tree_node<N> &parent_node, key &index_key_to_remove, offset &offset_to_delete)
+    merge_result bp_tree<N>::merge_leaf(bp_tree_leaf<N> &leaf, offset leaf_offset, bool is_last)
     {
-        auto ret = false;
+        merge_result result = { 0 };
 
         if (is_last)
         {
             // Leaf has no right neighbour, merge with prev
             assert(leaf.prev != 0);
-            offset_to_delete = leaf_offset;
+            
+            result.parent_offset = leaf.parent;
+            result.offset_to_delete = leaf_offset;
+
             bp_tree_leaf<N> prev;
             load(&prev, leaf.prev);
-            index_key_to_remove = prev.children[0].key;
 
             merge_leafs(prev, leaf);
             remove(prev, leaf);
@@ -789,16 +777,16 @@ namespace niffler {
         {
             // Leaf has a right neighbour, merge with next
             assert(leaf.next != 0);
-            offset_to_delete = leaf.next;
+
             bp_tree_leaf<N> next;
             load(&next, leaf.next);
-            index_key_to_remove = leaf.children[0].key;
+
+            result.parent_offset = next.parent;
+            result.offset_to_delete = leaf.next;
 
             const auto has_same_parent = leaf.parent == next.parent;
             if (!has_same_parent)
             {
-                ret = true;
-
                 bp_tree_node<N> next_parent;
                 load(&next_parent, next.parent);
                 promote_larger_key(next_parent.children[0].key, leaf_offset, leaf.parent, true);
@@ -809,7 +797,7 @@ namespace niffler {
             save(&leaf, leaf_offset);
         }
 
-        return ret;
+        return result;
     }
 
     template<size_t N>
