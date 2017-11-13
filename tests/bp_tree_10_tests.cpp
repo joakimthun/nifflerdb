@@ -1,7 +1,7 @@
 #include <gtest\gtest.h>
 #include <stdlib.h>
 
-#include "storage_provider.h"
+#include "storage_providers.h"
 #include "bp_tree.h"
 #include "test_helpers.h"
 
