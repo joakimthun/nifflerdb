@@ -38,7 +38,9 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tre
 
     key parent_key;
     if (!find_key_for_node_offset(leaf_parent, current_offset, &parent_key))
+    {
         return "leaf points to wrong parent";
+    }
 
     // If this leaf is a direct child of the root node and the root only has 1 key, keys will not be in a valid state
     // which is fine since we only have 1 key and will traverse to the correct leaf anyway
@@ -67,7 +69,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
             bp_tree_leaf<N> leaf;
             tree->load(&leaf, child.offset);
 
-            for (auto j = 0u; j < leaf.num_children; j++)
+            for (auto j = 0u; j < leaf.num_children - 1; j++)
             {
                 if (leaf.children[j].key > child.key)
                 {
@@ -84,7 +86,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
             bp_tree_node<N> child_node;
             tree->load(&child_node, child.offset);
 
-            for (auto j = 0u; j < child_node.num_children; j++)
+            for (auto j = 0u; j < child_node.num_children - 1; j++)
             {
                 if (child_node.children[j].key > child.key)
                 {
@@ -100,6 +102,14 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
 template<size_t N>
 bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree<N>> &tree, bp_tree_node<N> &node, offset current_offset, offset prev_offset, bool last_nlevel)
 {
+    for (auto i = 0u; i < node.num_children; i++)
+    {
+        bp_tree_node<N> node_child;
+        tree->load(&node_child, node.children[i].offset);
+        if (node_child.parent != current_offset)
+            return "node points to wrong parent";
+    }
+
     if (node.prev != prev_offset)
         return "node points to wrong left neighbour";
 
@@ -176,6 +186,9 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 
     while (leaf.next)
     {
+        bp_tree_leaf<N> leaf_prev;
+        tree->load(&leaf_prev, leaf.prev);
+
         result = validate_bp_tree_leaf(tree, leaf, current_leaf_offset, current_prev_offset);
         if (!result.valid)
             return result;
@@ -188,5 +201,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
     return true;
 }
 
+template bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<4>> &tree);
+template bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<6>> &tree);
 template bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<10>> &tree);
 template bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<DEFAULT_TREE_ORDER>> &tree);

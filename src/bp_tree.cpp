@@ -100,6 +100,24 @@ namespace niffler {
     }
 
     template<size_t N>
+    bool bp_tree<N>::exists(const key & key) const
+    {
+        auto parent_offset = search_tree(key);
+        assert(parent_offset != 0);
+
+        bp_tree_node<N> parent;
+        load(&parent, parent_offset);
+
+        auto leaf_offset = search_node(parent, key);
+        assert(leaf_offset != 0);
+
+        bp_tree_leaf<N> leaf;
+        load(&leaf, leaf_offset);
+
+        return binary_search_record(leaf, key) >= 0;
+    }
+
+    template<size_t N>
     bool bp_tree<N>::insert(const key &key, const value &value)
     {
         if (insert_internal(key, value))
@@ -184,8 +202,21 @@ namespace niffler {
             if (!could_borrow)
             {
                 niffler::key index_key_to_remove;
-                merge_leaf(leaf, leaf_offset, leaf.next == 0, index_key_to_remove);
-                remove_key(parent_offset, parent, index_key_to_remove);
+                offset offset_to_delete;
+                auto diff_p = merge_leaf(leaf, leaf_offset, leaf.next == 0, parent, index_key_to_remove, offset_to_delete);
+
+                if (diff_p)
+                {
+                    bp_tree_leaf<N> l;
+                    load(&l, leaf.next);
+                    bp_tree_node<N> p;
+                    load(&p, l.parent);
+                    remove_key(l.parent, p, index_key_to_remove, true, offset_to_delete);
+                }
+                else
+                {
+                  remove_key(parent_offset, parent, index_key_to_remove, false, offset_to_delete);
+                }
             }
             else
             {
@@ -344,34 +375,33 @@ namespace niffler {
     }
 
     template<size_t N>
-    void bp_tree<N>::remove_key(offset node_offset, bp_tree_node<N> &node, const key &key)
+    void bp_tree<N>::remove_key(offset node_offset, bp_tree_node<N> &node, const key &key, bool right_del, offset offset_to_delete)
     {
         const auto min_num_children = node.parent == 0 ? 1 : MIN_NUM_CHILDREN();
         auto index_key = node.children[0].key;
 
-        const auto delete_index = find_insert_index(node, key);
+        auto delete_index = 0u;
+        auto delete_index_set = false;
+        for (auto i = 0u; i < node.num_children; i++)
+        {
+            if (node.children[i].offset == offset_to_delete)
+            {
+                delete_index = i;
+                delete_index_set = true;
+                break;
+            }
+        }
+
+        assert(delete_index_set && "delete_index not set");
         assert(delete_index <= (node.num_children - 1));
 
-        // Remove if it's not the last child
-        if (delete_index != (node.num_children - 1)) {
-            /*
-            After child merge(invalid tree):
-                                            [ 7, 12, 18 ]
-                [ 3, 4, 5, 6, 7, 8, 9 ] [ 12, 13, 14, 15, 16, 17 ] [ X, X, X, ... ]
-
-            After key delete(valid tree):
-                                            [ 12, 18, ... ]
-                [ 3, 4, 5, 6, 7, 8, 9 ] [ 12, 13, 14, 15, 16, 17 ] [ X, X, X, ... ]
-            */
-
-            // Give the child of the deleted key to the next key
-            node.children[delete_index + 1].offset = node.children[delete_index].offset;
-            remove_key_at(node, delete_index);
-        }
-        else
+        if (delete_index > 0)
         {
-            node.num_children -= 1;
+            node.children[delete_index - 1].key = node.children[delete_index].key;
         }
+
+        remove_key_at(node, delete_index);
+
 
         // If we only have one child left we make that child the new root and free the old root
         if (node.num_children == 1 && header_.root_offset == node_offset && header_.num_internal_nodes != 1)
@@ -394,10 +424,24 @@ namespace niffler {
 
             if (!could_borrow)
             {
-                bp_tree_node<N> parent;
-                load(&parent, node.parent);
-                merge_node(node, node_offset, node_offset == parent.children[parent.num_children - 1].offset);
-                remove_key(node.parent, parent, index_key);
+                auto parent_offset = node.parent;
+                offset offset_to_delete;
+                auto diff_p = merge_node(node, node_offset, node.next == 0, offset_to_delete);
+
+                if (diff_p)
+                {
+                    bp_tree_node<N> n;
+                    load(&n, node.next);
+                    bp_tree_node<N> p;
+                    load(&p, n.parent);
+                    remove_key(n.parent, p, index_key, true, offset_to_delete);
+                }
+                else
+                {
+                    bp_tree_node<N> parent;
+                    load(&parent, parent_offset);
+                    remove_key(parent_offset, parent, index_key, false, offset_to_delete);
+                }
             }
             else
             {
@@ -481,6 +525,13 @@ namespace niffler {
         {
             src_index = 0;
             dest_index = borrower.num_children;
+
+            const auto has_same_parent = lender.parent == borrower.parent;
+            if (!has_same_parent)
+            {
+                promote_larger_key(lender.children[src_index].key, node_offset, borrower.parent, true);
+            }
+
             load(&parent, borrower.parent);
             const auto parent_key_index = find_parent_node_index(parent, borrower.children[borrower.num_children - 1].key);
             parent.children[parent_key_index].key = lender.children[0].key;
@@ -490,6 +541,13 @@ namespace niffler {
         {
             src_index = lender.num_children - 1;
             dest_index = 0;
+
+            const auto has_same_parent = lender.parent == borrower.parent;
+            if (!has_same_parent)
+            {
+                promote_smaller_key(lender.children[src_index - 1].key, lender_offset, lender.parent, true);
+            }
+
             load(&parent, lender.parent);
             const auto parent_key_index = find_insert_index(parent, lender.children[0].key);
             parent.children[parent_key_index].key = lender.children[src_index - 1].key;
@@ -529,12 +587,15 @@ namespace niffler {
     }
 
     template<size_t N>
-    void bp_tree<N>::merge_node(bp_tree_node<N> &node, offset node_offset, bool is_last)
+    bool bp_tree<N>::merge_node(bp_tree_node<N> &node, offset node_offset, bool is_last, offset &offset_to_delete)
     {
+        auto ret = false;
+
         if (is_last)
         {
             // Node has no right neighbour, merge with prev
             assert(node.prev != 0);
+            offset_to_delete = node_offset;
             bp_tree_node<N> prev;
             load(&prev, node.prev);
 
@@ -547,14 +608,27 @@ namespace niffler {
         {
             // Merge with next
             assert(node.next != 0);
+            offset_to_delete = node.next;
             bp_tree_node<N> next;
             load(&next, node.next);
+
+            const auto has_same_parent = node.parent == next.parent;
+            if (!has_same_parent)
+            {
+                ret = true;
+
+                bp_tree_node<N> next_parent;
+                load(&next_parent, next.parent);
+                promote_larger_key(next_parent.children[0].key, node_offset, node.parent, true);
+            }
 
             set_parent_ptr(next.children, next.num_children, node_offset);
             merge_nodes(node, next);
             remove(node, next);
             save(&node, node_offset);
         }
+
+        return ret;
     }
 
     template<size_t N>
@@ -594,6 +668,11 @@ namespace niffler {
             Parent: [ 7, 12, 18, ... ]
         */
 
+        if (parent_offset == 0)
+        {
+            auto xx = 10;
+        }
+
         assert(parent_offset != 0);
         bp_tree_node<N> parent;
         load(&parent, parent_offset);
@@ -604,7 +683,7 @@ namespace niffler {
         child.key = new_key;
         save(&parent, parent_offset);
 
-        if (is_last_child)
+        if (is_last_child && parent.parent)
         {
             // Traverse up the tree if we change the last key
             change_parent(parent.parent, old_key, new_key);
@@ -689,12 +768,15 @@ namespace niffler {
     }
 
     template<size_t N>
-    void bp_tree<N>::merge_leaf(bp_tree_leaf<N> &leaf, offset leaf_offset, bool is_last, key &index_key_to_remove)
+    bool bp_tree<N>::merge_leaf(bp_tree_leaf<N> &leaf, offset leaf_offset, bool is_last, bp_tree_node<N> &parent_node, key &index_key_to_remove, offset &offset_to_delete)
     {
+        auto ret = false;
+
         if (is_last)
         {
             // Leaf has no right neighbour, merge with prev
             assert(leaf.prev != 0);
+            offset_to_delete = leaf_offset;
             bp_tree_leaf<N> prev;
             load(&prev, leaf.prev);
             index_key_to_remove = prev.children[0].key;
@@ -707,20 +789,33 @@ namespace niffler {
         {
             // Leaf has a right neighbour, merge with next
             assert(leaf.next != 0);
+            offset_to_delete = leaf.next;
             bp_tree_leaf<N> next;
             load(&next, leaf.next);
             index_key_to_remove = leaf.children[0].key;
+
+            const auto has_same_parent = leaf.parent == next.parent;
+            if (!has_same_parent)
+            {
+                ret = true;
+
+                bp_tree_node<N> next_parent;
+                load(&next_parent, next.parent);
+                promote_larger_key(next_parent.children[0].key, leaf_offset, leaf.parent, true);
+            }
 
             merge_leafs(leaf, next);
             remove(leaf, next);
             save(&leaf, leaf_offset);
         }
+
+        return ret;
     }
 
     template<size_t N>
     void bp_tree<N>::merge_leafs(bp_tree_leaf<N> &first, bp_tree_leaf<N> &second)
     {
-        auto total_num_records = first.num_children + second.num_children;
+        const auto total_num_records = first.num_children + second.num_children;
         assert(total_num_records <= MAX_NUM_CHILDREN());
 
         for (auto i = first.num_children; i < total_num_records; i++)
@@ -839,6 +934,85 @@ namespace niffler {
     }
 
     template<size_t N>
+    void bp_tree<N>::promote_larger_key(const key &key_to_promote, offset node_offset, offset parent_offset, bool promote_parent)
+    {
+        bp_tree_node<N> parent;
+        load(&parent, parent_offset);
+
+        bool set = false;
+
+        for (auto i = 0u; i < parent.num_children; i++)
+        {
+            if (parent.children[i].offset == node_offset)
+            {
+                if (parent.children[i].key >= key_to_promote)
+                {
+                    return;
+                }
+
+                parent.children[i].key = key_to_promote;
+                save(&parent, parent_offset);
+                set = true;
+                break;
+            }
+        }
+
+        assert(set && "promote_key could not promote key");
+
+        if (parent.parent)
+        {
+            promote_larger_key(key_to_promote, parent_offset, parent.parent, false);
+        }
+    }
+
+    template<size_t N>
+    void bp_tree<N>::promote_smaller_key(const key & key_to_promote, offset node_offset, offset parent_offset, bool promote_parent)
+    {
+        bp_tree_node<N> parent;
+        load(&parent, parent_offset);
+
+        bool set = false;
+
+        for (auto i = 0u; i < parent.num_children; i++)
+        {
+            if (parent.children[i].offset == node_offset)
+            {
+                if (parent.children[i].key <= key_to_promote)
+                {
+                    return;
+                }
+
+                parent.children[i].key = key_to_promote;
+                save(&parent, parent_offset);
+                set = true;
+
+                if (parent.children[parent.num_children - 1].key > key_to_promote)
+                {
+                    /*
+                        Stop the "key promotion" when we hit a node with keys larger than key_to_promote 
+                        to prevent breaking nodes further up the tree.
+
+                        Example when key_to_promote == 6517, keys larger than 6516 will be unreachable if we continue promoting:
+                        [ 18256, 30710 ]
+                        [ 6517, 12890, 18256]
+                    */
+
+                    return;
+                }
+
+                break;
+            }
+        }
+
+        assert(set && "promote_key could not promote key");
+
+        if (parent.parent)
+        {
+            promote_smaller_key(key_to_promote, parent_offset, parent.parent, false);
+        }
+    }
+
+    template<size_t N>
     template<class T>
     tuple<bool, size_t> bp_tree<N>::find_split_index(const T *arr, size_t arr_len, const key & key)
     {
@@ -934,7 +1108,7 @@ namespace niffler {
     }
 
     template<size_t N>
-    int64_t bp_tree<N>::binary_search_record(const bp_tree_leaf<N> &leaf, const key &key)
+    int64_t bp_tree<N>::binary_search_record(const bp_tree_leaf<N> &leaf, const key &key) const
     {
         if (leaf.num_children == 0)
             return -1;
@@ -1044,18 +1218,18 @@ namespace niffler {
         bp_tree_node<N> n;
         load(&n, node_offset);
 
-        ss << "[";
+        ss << "[O:" << node_offset << " P:" << n.parent << " PR:" << n.prev << " N:" << n.next << " {";
 
         for (auto i = 0u; i < n.num_children; i++)
         {
-            ss << n.children[i].key;
+            ss << "{" << n.children[i].key << "," << n.children[i].offset << "}";
             if (i != n.num_children - 1)
             {
                 ss << ",";
             }
         }
 
-        ss << "]";
+        ss << "}]  ";
 
         if (n.next != 0)
         {
@@ -1069,7 +1243,7 @@ namespace niffler {
         bp_tree_leaf<N> l;
         load(&l, leaf_offset);
 
-        ss << "[";
+        ss << "[O:" << leaf_offset << " P:" << l.parent << " PR:" << l.prev << " N:" << l.next << " {";
 
         for (auto i = 0u; i < l.num_children; i++)
         {
@@ -1080,7 +1254,7 @@ namespace niffler {
             }
         }
 
-        ss << "]";
+        ss << "}]  ";
 
         if (l.next != 0)
         {
@@ -1131,6 +1305,8 @@ namespace niffler {
         storage_->store(value, offset, sizeof(T));
     }
 
+    template class bp_tree<4>;
+    template class bp_tree<6>;
     template class bp_tree<10>;
     template class bp_tree<DEFAULT_TREE_ORDER>;
 }

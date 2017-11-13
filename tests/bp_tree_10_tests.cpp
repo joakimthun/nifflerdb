@@ -39,6 +39,48 @@ TEST(BP_TREE_10, LEAF_BINARY_SEARCH)
     EXPECT_EQ(-1, t->binary_search_record(leaf, 200));
 }
 
+TEST(BP_TREE_10, INSERT_NODE_AT)
+{
+    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    bp_tree_node<10> node;
+
+    t->insert_node_at(node, -1, 0, 0);
+    EXPECT_EQ(1, node.num_children);
+    EXPECT_EQ(-1, node.children[0].key);
+
+    t->insert_node_at(node, -2, 0, 0);
+    EXPECT_EQ(2, node.num_children);
+    EXPECT_EQ(-2, node.children[0].key);
+
+    t->insert_node_at(node, 1, 0, 2);
+    EXPECT_EQ(3, node.num_children);
+    EXPECT_EQ(1, node.children[2].key);
+
+    t->insert_node_at(node, 0, 0, 2);
+    EXPECT_EQ(4, node.num_children);
+    EXPECT_EQ(-2, node.children[0].key);
+    EXPECT_EQ(-1, node.children[1].key);
+    EXPECT_EQ(0, node.children[2].key);
+    EXPECT_EQ(1, node.children[3].key);
+
+    t->insert_node_at(node, 2, 0, 4);
+    EXPECT_EQ(5, node.num_children);
+    EXPECT_EQ(-2, node.children[0].key);
+    EXPECT_EQ(-1, node.children[1].key);
+    EXPECT_EQ(0, node.children[2].key);
+    EXPECT_EQ(1, node.children[3].key);
+    EXPECT_EQ(2, node.children[4].key);
+
+    t->insert_node_at(node, -3, 0, 0);
+    EXPECT_EQ(6, node.num_children);
+    EXPECT_EQ(-3, node.children[0].key);
+    EXPECT_EQ(-2, node.children[1].key);
+    EXPECT_EQ(-1, node.children[2].key);
+    EXPECT_EQ(0, node.children[3].key);
+    EXPECT_EQ(1, node.children[4].key);
+    EXPECT_EQ(2, node.children[5].key);
+}
+
 TEST(BP_TREE_10, INSERT_RECORD_AT)
 {
     auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
