@@ -4,15 +4,41 @@
 #include <cstring>
 #include <stdint.h>
 #include <assert.h>
+#include <math.h>
+#include <algorithm>
 
 #include "define.h"
 
 namespace niffler {
 
+    constexpr size_t DEFAULT_NUM_PAGES = 10;
+
     memory_storage_provider::memory_storage_provider()
     {
-        buffer_ = static_cast<u8*>(malloc(PAGE_SIZE * 10));
-        size_ = PAGE_SIZE * 10;
+        init(DEFAULT_NUM_PAGES);
+    }
+
+    memory_storage_provider::memory_storage_provider(unique_ptr<file_storage_provider> file_storage)
+        :
+        file_storage_(std::move(file_storage)),
+        has_file_storage_(true)
+    {
+        if (!file_storage_->ok())
+            return;
+
+        const auto file_size = file_storage_->size();
+        if (file_size == -1)
+            return;
+
+        if (file_size == 0)
+        {
+            init(DEFAULT_NUM_PAGES);
+        }
+        else
+        {
+            const auto num_pages_required = static_cast<size_t>(ceil(static_cast<double>(file_size) / PAGE_SIZE));
+            init(std::max(num_pages_required, DEFAULT_NUM_PAGES));
+        }
     }
 
     memory_storage_provider::~memory_storage_provider()
@@ -23,6 +49,9 @@ namespace niffler {
 
     bool memory_storage_provider::ok() const
     {
+        if (has_file_storage_ && (file_storage_ == nullptr || !file_storage_->ok()))
+            return false;
+
         return buffer_ != nullptr;
     }
 
@@ -33,7 +62,7 @@ namespace niffler {
         return true;
     }
 
-    bool memory_storage_provider::store(void *value, offset offset, size_t size)
+    bool memory_storage_provider::store(const void *value, offset offset, size_t size)
     {
         resize_if_needed(offset + size);
         memcpy(buffer_ + offset, value, size);
@@ -43,6 +72,12 @@ namespace niffler {
     bool memory_storage_provider::sync()
     {
         return true;
+    }
+
+    void memory_storage_provider::init(size_t num_pages)
+    {
+        size_ = PAGE_SIZE * num_pages;
+        buffer_ = static_cast<u8*>(malloc(size_));
     }
 
     void memory_storage_provider::resize_if_needed(size_t min_size)
@@ -81,7 +116,7 @@ namespace niffler {
         return fread(buffer, size, 1, file_handle_.file) == 1;
     }
 
-    bool file_storage_provider::store(void *value, offset offset, size_t size)
+    bool file_storage_provider::store(const void *value, offset offset, size_t size)
     {
         fseek(file_handle_.file, offset, SEEK_SET);
         return fwrite(value, size, 1, file_handle_.file) == 1;
@@ -99,5 +134,11 @@ namespace niffler {
 
     void file_storage_provider::free_block(offset offset, size_t size)
     {
+    }
+
+    long file_storage_provider::size()
+    {
+        fseek(file_handle_.file, 0, SEEK_END);
+        return ftell(file_handle_.file);
     }
 }
