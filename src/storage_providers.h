@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "define.h"
 #include "files.h"
@@ -9,8 +10,16 @@ namespace niffler {
 
     using std::size_t;
     using std::unique_ptr;
+    using std::vector;
 
     class file_storage_provider;
+
+    struct block
+    {
+        block(offset offset, size_t size) : offset(offset), size(size) {}
+        const offset offset;
+        const size_t size;
+    };
 
     struct storage_provider
     {
@@ -40,6 +49,7 @@ namespace niffler {
         u8 *buffer_ = nullptr;
         bool has_file_storage_ = false;
         unique_ptr<file_storage_provider> file_storage_;
+        vector<block> dirty_blocks_;
     };
 
     class file_storage_provider : public storage_provider

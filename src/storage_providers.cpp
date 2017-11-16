@@ -66,12 +66,21 @@ namespace niffler {
     {
         resize_if_needed(offset + size);
         memcpy(buffer_ + offset, value, size);
+        dirty_blocks_.emplace_back(offset, size);
         return true;
     }
 
     bool memory_storage_provider::sync()
     {
-        return true;
+        for (const auto& block : dirty_blocks_)
+        {
+            const auto *value = buffer_ + block.offset;
+            file_storage_->store(value, block.offset, block.size);
+        }
+
+        dirty_blocks_.clear();
+
+        return file_storage_->sync();
     }
 
     void memory_storage_provider::init(size_t num_pages)
