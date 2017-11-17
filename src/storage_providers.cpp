@@ -38,6 +38,7 @@ namespace niffler {
         {
             const auto num_pages_required = static_cast<size_t>(ceil(static_cast<double>(file_size) / PAGE_SIZE));
             init(std::max(num_pages_required, DEFAULT_NUM_PAGES));
+            file_storage_->load(buffer_, 0, static_cast<size_t>(file_size));
         }
     }
 

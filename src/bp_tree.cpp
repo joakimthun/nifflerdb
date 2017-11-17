@@ -25,7 +25,14 @@ namespace niffler {
     {
         // TODO: Remove the size and padding requirements with some kind of serialization
         bp_tree<N>::assert_sizes();
-        return false;
+
+        if (!storage->ok())
+            return result<bp_tree<N>>(false, nullptr);
+
+        auto t = std::unique_ptr<bp_tree<N>>(new bp_tree<N>(std::move(storage)));
+        t->load(&t->header_, BASE_OFFSET_HEADER_BLOCK);
+
+        return result<bp_tree<N>>(true, std::move(t));
     }
 
     template<size_t N>
