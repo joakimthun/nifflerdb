@@ -3,7 +3,10 @@
 #include <string.h>
 #include <memory>
 
+#include "files.h"
 #include "bp_tree.h"
+#include "memory_storage_provider.h"
+#include "file_storage_provider.h"
 
 using namespace niffler;
 

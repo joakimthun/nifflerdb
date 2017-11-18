@@ -3,7 +3,6 @@
 #include <unordered_set>
 #include <iostream>
 
-#include "storage_providers.h"
 #include "bp_tree.h"
 #include "test_helpers.h"
 
