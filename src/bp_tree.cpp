@@ -207,11 +207,11 @@ namespace niffler {
                 if (merge_result.parent_page != parent_page)
                 {
                     load(&parent, merge_result.parent_page);
-                    remove_by_offset(merge_result.parent_page, parent, merge_result.page_to_delete);
+                    remove_by_page(merge_result.parent_page, parent, merge_result.page_to_delete);
                 }
                 else
                 {
-                    remove_by_offset(parent_page, parent, merge_result.page_to_delete);
+                    remove_by_page(parent_page, parent, merge_result.page_to_delete);
                 }
             }
             else
@@ -371,7 +371,7 @@ namespace niffler {
     }
 
     template<size_t N>
-    void bp_tree<N>::remove_by_offset(page_index node_page, bp_tree_node<N> &node, page_index page_to_delete)
+    void bp_tree<N>::remove_by_page(page_index node_page, bp_tree_node<N> &node, page_index page_to_delete)
     {
         const auto min_num_children = node.parent_page == 0 ? 1 : MIN_NUM_CHILDREN();
 
@@ -423,7 +423,7 @@ namespace niffler {
 
                 bp_tree_node<N> parent;
                 load(&parent, merge_result.parent_page);
-                remove_by_offset(merge_result.parent_page, parent, merge_result.page_to_delete);
+                remove_by_page(merge_result.parent_page, parent, merge_result.page_to_delete);
             }
             else
             {

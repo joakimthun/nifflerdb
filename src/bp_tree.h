@@ -104,7 +104,7 @@ namespace niffler {
         void insert_key_at(bp_tree_node<N> &node, const key &key, page_index next_page, size_t index);
         void remove_key_at(bp_tree_node<N> &source, size_t index);
         void set_parent_ptr(bp_tree_node_child *children, size_t c_length, page_index parent_page);
-        void remove_by_offset(page_index node_page, bp_tree_node<N> &node, page_index page_to_delete);
+        void remove_by_page(page_index node_page, bp_tree_node<N> &node, page_index page_to_delete);
         bool borrow_key(bp_tree_node<N> &borrower, page_index node_page);
         bool borrow_key(lender_side from_side, bp_tree_node<N> &borrower, page_index node_page);
         void insert_node_at(bp_tree_node<N> &node, const key &key, page_index page, size_t index);
