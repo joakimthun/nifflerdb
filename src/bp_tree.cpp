@@ -8,9 +8,9 @@ namespace niffler {
     using std::tie;
     using std::stringstream;
 
-    constexpr size_t HEADER_PAGE_INDEX = 1;
+    constexpr u32 HEADER_PAGE_INDEX = 1;
 
-    template<size_t N>
+    template<u32 N>
     constexpr void bp_tree<N>::assert_sizes()
     {
         static_assert(sizeof(bp_tree_header) == 36, "sizeof(bp_tree_header) != 36");
@@ -20,7 +20,7 @@ namespace niffler {
         static_assert(sizeof(bp_tree_leaf<N>) == (20 + sizeof(bp_tree_record) * N), "wrong size: bp_tree_leaf<N>");
     }
 
-    template<size_t N>
+    template<u32 N>
     result<bp_tree<N>> bp_tree<N>::load(pager *pager)
     {
         // TODO: Remove the size and padding requirements with some kind of serialization
@@ -32,7 +32,7 @@ namespace niffler {
         return result<bp_tree<N>>(true, std::move(t));
     }
 
-    template<size_t N>
+    template<u32 N>
     result<bp_tree<N>> bp_tree<N>::create(pager *pager)
     {
         // TODO: Remove the size and padding requirements with some kind of serialization
@@ -71,13 +71,13 @@ namespace niffler {
         return result<bp_tree<N>>(sync_result, std::move(t));
     }
 
-    template<size_t N>
+    template<u32 N>
     const bp_tree_header &bp_tree<N>::header() const
     {
         return header_;
     }
 
-    template<size_t N>
+    template<u32 N>
     string bp_tree<N>::print() const
     {
         stringstream ss;
@@ -100,7 +100,7 @@ namespace niffler {
         return ss.str();
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::exists(const key & key) const
     {
         auto parent_page = search_tree(key);
@@ -118,7 +118,7 @@ namespace niffler {
         return binary_search_record(leaf, key) >= 0;
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::insert(const key &key, const value &value)
     {
         if (insert_internal(key, value))
@@ -127,7 +127,7 @@ namespace niffler {
         return false;
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::remove(const key &key)
     {
         if (remove_internal(key))
@@ -136,14 +136,14 @@ namespace niffler {
         return false;
     }
 
-    template<size_t N>
+    template<u32 N>
     bp_tree<N>::bp_tree(pager *pager)
         :
         pager_(pager)
     {
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::insert_internal(const key &key, const value &value)
     {
         auto parent_page = search_tree(key);
@@ -174,7 +174,7 @@ namespace niffler {
         return true;
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::remove_internal(const key &key)
     {
         auto parent_page = search_tree(key);
@@ -227,7 +227,7 @@ namespace niffler {
         return true;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::insert_key(page_index node_page, const key &key, page_index left_page, page_index right_page)
     {
         // We have reached the root of the tree so we create a new root node
@@ -259,7 +259,7 @@ namespace niffler {
             auto new_node_page = create(node_page, node, new_node, [this](auto n) { return alloc_node(n); });
 
             bool key_greater_than_key_at_split;
-            size_t split_index;
+            u32 split_index;
             std::tie(key_greater_than_key_at_split, split_index) = find_split_index(node.children, node.num_children - 1, key);
 
             /*
@@ -307,15 +307,15 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::insert_key_non_full(bp_tree_node<N> &node, const key &key, page_index next_page)
     {
         auto dest_index = find_insert_index(node, key);
         insert_key_at(node, key, next_page, dest_index);
     }
 
-    template<size_t N>
-    void bp_tree<N>::insert_key_at(bp_tree_node<N> &node, const key &key, page_index next_page, size_t index)
+    template<u32 N>
+    void bp_tree<N>::insert_key_at(bp_tree_node<N> &node, const key &key, page_index next_page, u32 index)
     {
         assert(index < (node.num_children + 1));
 
@@ -344,8 +344,8 @@ namespace niffler {
         node.num_children++;
     }
 
-    template<size_t N>
-    void bp_tree<N>::remove_key_at(bp_tree_node<N>& source, size_t index)
+    template<u32 N>
+    void bp_tree<N>::remove_key_at(bp_tree_node<N>& source, u32 index)
     {
         assert(index < source.num_children);
         assert(source.num_children > 0);
@@ -358,8 +358,8 @@ namespace niffler {
         source.num_children--;
     }
 
-    template<size_t N>
-    void bp_tree<N>::set_parent_ptr(bp_tree_node_child *children, size_t c_length, page_index parent_page)
+    template<u32 N>
+    void bp_tree<N>::set_parent_ptr(bp_tree_node_child *children, u32 c_length, page_index parent_page)
     {
         bp_tree_node<N> node;
         for (auto i = 0u; i < c_length; i++)
@@ -370,7 +370,7 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::remove_by_page(page_index node_page, bp_tree_node<N> &node, page_index page_to_delete)
     {
         const auto min_num_children = node.parent_page == 0 ? 1 : MIN_NUM_CHILDREN();
@@ -436,7 +436,7 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::borrow_key(bp_tree_node<N> &borrower, page_index node_page)
     {
         auto could_borrow = borrow_key(lender_side::left, borrower, node_page);
@@ -446,7 +446,7 @@ namespace niffler {
         return borrow_key(lender_side::right, borrower, node_page);
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::borrow_key(lender_side from_side, bp_tree_node<N> &borrower, page_index node_page)
     {
         assert(borrower.num_children < MIN_NUM_CHILDREN());
@@ -468,8 +468,8 @@ namespace niffler {
             return false;
         }
 
-        size_t src_index;
-        size_t dest_index;
+        u32 src_index;
+        u32 dest_index;
         bp_tree_node<N> parent;
 
         auto find_parent_node_index = [](const bp_tree_node<N> &n, const key &key) {
@@ -552,8 +552,8 @@ namespace niffler {
         return true;
     }
 
-    template<size_t N>
-    void bp_tree<N>::insert_node_at(bp_tree_node<N>& node, const key &key, page_index page, size_t index)
+    template<u32 N>
+    void bp_tree<N>::insert_node_at(bp_tree_node<N>& node, const key &key, page_index page, u32 index)
     {
         assert(index < (node.num_children + 1));
 
@@ -568,7 +568,7 @@ namespace niffler {
         node.num_children++;
     }
 
-    template<size_t N>
+    template<u32 N>
     merge_result bp_tree<N>::merge_node(bp_tree_node<N> &node, page_index node_page, bool is_last)
     {
         merge_result result = { 0 };
@@ -617,7 +617,7 @@ namespace niffler {
         return result;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::merge_nodes(bp_tree_node<N> &first, bp_tree_node<N> &second)
     {
         auto total_num_children = first.num_children + second.num_children;
@@ -632,7 +632,7 @@ namespace niffler {
         second.num_children = 0;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::change_parent(page_index parent_page, const key &old_key, const key &new_key)
     {
         /*
@@ -671,7 +671,7 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::borrow_key(bp_tree_leaf<N> &borrower)
     {
         auto could_borrow = borrow_key(lender_side::left, borrower);
@@ -681,7 +681,7 @@ namespace niffler {
         return borrow_key(lender_side::right, borrower);
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::borrow_key(lender_side from_side, bp_tree_leaf<N> &borrower)
     {
         /*
@@ -723,8 +723,8 @@ namespace niffler {
             return false;
         }
 
-        size_t src_index;
-        size_t dest_index;
+        u32 src_index;
+        u32 dest_index;
 
         if (from_side == lender_side::right)
         {
@@ -748,7 +748,7 @@ namespace niffler {
         return true;
     }
 
-    template<size_t N>
+    template<u32 N>
     merge_result bp_tree<N>::merge_leaf(bp_tree_leaf<N> &leaf, page_index leaf_page, bool is_last)
     {
         merge_result result = { 0 };
@@ -795,7 +795,7 @@ namespace niffler {
         return result;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::merge_leafs(bp_tree_leaf<N> &first, bp_tree_leaf<N> &second)
     {
         const auto total_num_records = first.num_children + second.num_children;
@@ -810,8 +810,8 @@ namespace niffler {
         second.num_children = 0;
     }
 
-    template<size_t N>
-    void bp_tree<N>::transfer_children(bp_tree_node<N> &source, bp_tree_node<N> &target, size_t from_index)
+    template<u32 N>
+    void bp_tree<N>::transfer_children(bp_tree_node<N> &source, bp_tree_node<N> &target, u32 from_index)
     {
         assert(from_index < source.num_children);
 
@@ -825,7 +825,7 @@ namespace niffler {
         source.num_children = from_index;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::insert_record_non_full(bp_tree_leaf<N> &leaf, const key &key, const value &value)
     {
         assert((leaf.num_children + 1) <= header_.order);
@@ -833,8 +833,8 @@ namespace niffler {
         insert_record_at(leaf, key, value, dest_index);
     }
 
-    template<size_t N>
-    void bp_tree<N>::insert_record_at(bp_tree_leaf<N> &leaf, const key &key, const value &value, size_t index)
+    template<u32 N>
+    void bp_tree<N>::insert_record_at(bp_tree_leaf<N> &leaf, const key &key, const value &value, u32 index)
     {
         assert(index < (leaf.num_children + 1));
 
@@ -849,7 +849,7 @@ namespace niffler {
         leaf.num_children++;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::insert_record_split(const key& key, const value &value, page_index leaf_page, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf)
     {
         assert(leaf.num_children == header_.order);
@@ -857,7 +857,7 @@ namespace niffler {
         auto new_leaf_page = create(leaf_page, leaf, new_leaf, [this](auto l) { return alloc_leaf(l); });
 
         bool key_greater_than_key_at_split;
-        size_t split_index;
+        u32 split_index;
         std::tie(key_greater_than_key_at_split, split_index) = find_split_index(leaf.children, leaf.num_children, key);
 
         transfer_records(leaf, new_leaf, split_index);
@@ -875,8 +875,8 @@ namespace niffler {
         save(&new_leaf, new_leaf_page);
     }
 
-    template<size_t N>
-    void bp_tree<N>::transfer_records(bp_tree_leaf<N> &source, bp_tree_leaf<N> &target, size_t from_index)
+    template<u32 N>
+    void bp_tree<N>::transfer_records(bp_tree_leaf<N> &source, bp_tree_leaf<N> &target, u32 from_index)
     {
         assert(from_index < source.num_children);
 
@@ -890,19 +890,19 @@ namespace niffler {
         source.num_children = from_index;
     }
 
-    template<size_t N>
+    template<u32 N>
     bool bp_tree<N>::remove_record(bp_tree_leaf<N> &source, const key &key)
     {
         auto remove_index = binary_search_record(source, key);
         if (remove_index < 0)
             return false;
 
-        remove_record_at(source, static_cast<size_t>(remove_index));
+        remove_record_at(source, static_cast<u32>(remove_index));
         return true;
     }
 
-    template<size_t N>
-    void bp_tree<N>::remove_record_at(bp_tree_leaf<N> &source, size_t index)
+    template<u32 N>
+    void bp_tree<N>::remove_record_at(bp_tree_leaf<N> &source, u32 index)
     {
         assert(index < source.num_children);
 
@@ -914,7 +914,7 @@ namespace niffler {
         source.num_children--;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::promote_larger_key(const key &key_to_promote, page_index node_page, page_index parent_page)
     {
         bp_tree_node<N> parent;
@@ -946,7 +946,7 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::promote_smaller_key(const key & key_to_promote, page_index node_page, page_index parent_page)
     {
         bp_tree_node<N> parent;
@@ -993,9 +993,9 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     template<class T>
-    tuple<bool, size_t> bp_tree<N>::find_split_index(const T *arr, size_t arr_len, const key & key)
+    tuple<bool, u32> bp_tree<N>::find_split_index(const T *arr, u32 arr_len, const key & key)
     {
         static_assert(std::is_same<T, bp_tree_record>::value || std::is_same<T, bp_tree_node_child>::value, "T must be a record or a node child");
 
@@ -1010,7 +1010,7 @@ namespace niffler {
         return std::make_tuple(key_greater_than_key_at_split, split_index);
     }
 
-    template<size_t N>
+    template<u32 N>
     page_index bp_tree<N>::search_tree(const key &key) const
     {
         page_index current_page = header_.root_page;
@@ -1027,7 +1027,7 @@ namespace niffler {
         return current_page;
     }
 
-    template<size_t N>
+    template<u32 N>
     page_index bp_tree<N>::search_node(page_index page, const key &key) const
     {
         bp_tree_node<N> node;
@@ -1035,14 +1035,14 @@ namespace niffler {
         return find_node_child(node, key).page;
     }
 
-    template<size_t N>
+    template<u32 N>
     page_index bp_tree<N>::search_node(bp_tree_node<N> &node, const key &key) const
     {
         return find_node_child(node, key).page;
     }
 
-    template<size_t N>
-    size_t bp_tree<N>::find_insert_index(const bp_tree_leaf<N> &leaf, const key &key) const
+    template<u32 N>
+    u32 bp_tree<N>::find_insert_index(const bp_tree_leaf<N> &leaf, const key &key) const
     {
         for (auto i = 0u; i < leaf.num_children; i++)
         {
@@ -1055,8 +1055,8 @@ namespace niffler {
         return leaf.num_children;
     }
 
-    template<size_t N>
-    size_t bp_tree<N>::find_insert_index(const bp_tree_node<N> &node, const key &key) const
+    template<u32 N>
+    u32 bp_tree<N>::find_insert_index(const bp_tree_node<N> &node, const key &key) const
     {
         assert(node.num_children > 0);
 
@@ -1071,7 +1071,7 @@ namespace niffler {
         return node.num_children - 1;
     }
 
-    template<size_t N>
+    template<u32 N>
     bp_tree_node_child &bp_tree<N>::find_node_child(bp_tree_node<N> &node, const key &key) const
     {
         if (node.num_children == 0)
@@ -1088,7 +1088,7 @@ namespace niffler {
         return node.children[node.num_children - 1];
     }
 
-    template<size_t N>
+    template<u32 N>
     int64_t bp_tree<N>::binary_search_record(const bp_tree_leaf<N> &leaf, const key &key) const
     {
         if (leaf.num_children == 0)
@@ -1117,48 +1117,48 @@ namespace niffler {
         return -1;
     }
 
-    template<size_t N>
+    template<u32 N>
     page_index bp_tree<N>::alloc_node(bp_tree_node<N> &node)
     {
         header_.num_internal_nodes++;
         return alloc(sizeof(bp_tree_node<N>));
     }
 
-    template<size_t N>
+    template<u32 N>
     page_index bp_tree<N>::alloc_leaf(bp_tree_leaf<N> &leaf)
     {
         header_.num_leaf_nodes++;
         return alloc(sizeof(bp_tree_leaf<N>));
     }
 
-    template<size_t N>
-    page_index bp_tree<N>::alloc(size_t size)
+    template<u32 N>
+    page_index bp_tree<N>::alloc(u32 size)
     {
         assert(size <= PAGE_SIZE);
         return pager_->get_free_page().index;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::free(bp_tree_node<N> &node, page_index node_page)
     {
         header_.num_internal_nodes -= 1;
         free(sizeof(bp_tree_node<N>), node_page);
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::free(bp_tree_leaf<N> &leaf, page_index leaf_page)
     {
         header_.num_leaf_nodes -= 1;
         free(sizeof(bp_tree_leaf<N>), leaf_page);
     }
 
-    template<size_t N>
-    void bp_tree<N>::free(size_t size, page_index page)
+    template<u32 N>
+    void bp_tree<N>::free(u32 size, page_index page)
     {
         //TODO: Free this block in pager
     }
 
-    template<size_t N>
+    template<u32 N>
     template<class T, class NodeAllocator>
     page_index bp_tree<N>::create(page_index node_page, T & node, T & new_node, NodeAllocator node_allocator)
     {
@@ -1192,7 +1192,7 @@ namespace niffler {
         return node.next_page;
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::print_node_level(stringstream &ss, page_index node_page) const
     {
         bp_tree_node<N> n;
@@ -1217,7 +1217,7 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     void bp_tree<N>::print_leaf_level(stringstream &ss, page_index leaf_page) const
     {
         bp_tree_leaf<N> l;
@@ -1242,7 +1242,7 @@ namespace niffler {
         }
     }
 
-    template<size_t N>
+    template<u32 N>
     template<class T>
     void bp_tree<N>::remove(T &prev, T &node)
     {
@@ -1269,7 +1269,7 @@ namespace niffler {
         save(&header_, HEADER_PAGE_INDEX);
     }
 
-    template<size_t N>
+    template<u32 N>
     template<class T>
     void bp_tree<N>::load(T *buffer, page_index page) const
     {
@@ -1280,7 +1280,7 @@ namespace niffler {
         memcpy(buffer, page_to_load.content, sizeof(T));
     }
 
-    template<size_t N>
+    template<u32 N>
     template<class T>
     void bp_tree<N>::save(T *value, page_index page) const
     {
