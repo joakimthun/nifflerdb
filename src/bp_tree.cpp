@@ -335,8 +335,8 @@ namespace niffler {
 
             node.children[index].key = key;
 
-            // Point the newly inserted key to the offset of the previous key at this index and
-            // point the key to the right(previous key) of the new key to the next_offset
+            // Point the newly inserted key to the page of the previous key at this index and
+            // point the key to the right(previous key) of the new key to the next_page
             node.children[index].page = node.children[index + 1].page;
             node.children[index + 1].page = next_page;
         }
