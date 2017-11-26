@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "serialization.h"
+
 namespace niffler {
 
     using std::tie;

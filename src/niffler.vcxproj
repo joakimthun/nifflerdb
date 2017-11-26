@@ -188,12 +188,14 @@
     <ClCompile Include="bp_tree.cpp" />
     <ClCompile Include="files.cpp" />
     <ClCompile Include="pager.cpp" />
+    <ClCompile Include="serialization.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bp_tree.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="files.h" />
     <ClInclude Include="pager.h" />
+    <ClInclude Include="serialization.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
