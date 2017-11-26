@@ -187,18 +187,13 @@
   <ItemGroup>
     <ClCompile Include="bp_tree.cpp" />
     <ClCompile Include="files.cpp" />
-    <ClCompile Include="file_storage_provider.cpp" />
-    <ClCompile Include="memory_storage_provider.cpp" />
     <ClCompile Include="pager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bp_tree.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="files.h" />
-    <ClInclude Include="file_storage_provider.h" />
-    <ClInclude Include="memory_storage_provider.h" />
     <ClInclude Include="pager.h" />
-    <ClInclude Include="storage_provider.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
