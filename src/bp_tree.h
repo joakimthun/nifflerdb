@@ -156,9 +156,9 @@ namespace niffler {
         void remove(T &prev, T &node);
 
         template<class T>
-        void load(T *buffer, page_index page) const;
+        void load(T &t, page_index page) const;
         template<class T>
-        void save(T *value, page_index page) const;
+        void save(const T &t, page_index page) const;
 
         pager *pager_;
         bp_tree_header header_;

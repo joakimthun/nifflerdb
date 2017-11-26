@@ -22,7 +22,7 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tre
         return "leaf points to wrong left neighbour";
 
     bp_tree_node<N> leaf_parent;
-    tree->load(&leaf_parent, leaf.parent_page);
+    tree->load(leaf_parent, leaf.parent_page);
     auto is_root_descendant = leaf_parent.parent_page == 0;
 
     // If this leaf is a direct child of the root node it cant be within the valid children range
@@ -67,7 +67,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
         {
             auto& child = node.children[i];
             bp_tree_leaf<N> leaf;
-            tree->load(&leaf, child.page);
+            tree->load(leaf, child.page);
 
             for (auto j = 0u; j < leaf.num_children - 1; j++)
             {
@@ -84,7 +84,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
         {
             auto& child = node.children[i];
             bp_tree_node<N> child_node;
-            tree->load(&child_node, child.page);
+            tree->load(child_node, child.page);
 
             for (auto j = 0u; j < child_node.num_children - 1; j++)
             {
@@ -105,7 +105,7 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree<N>> &tre
     for (auto i = 0u; i < node.num_children; i++)
     {
         bp_tree_node<N> node_child;
-        tree->load(&node_child, node.children[i].page);
+        tree->load(node_child, node.children[i].page);
         if (node_child.parent_page != current_page)
             return "node points to wrong parent";
     }
@@ -126,7 +126,7 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree<N>> &tre
     if (node.next_page)
     {
         bp_tree_node<N> next_node;
-        tree->load(&next_node, node.next_page);
+        tree->load(next_node, node.next_page);
         return validate_bp_tree_node(tree, next_node, node.next_page, current_page, last_nlevel);
     }
 
@@ -137,7 +137,7 @@ template<size_t N>
 bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 {
     bp_tree_node<N> root;
-    tree->load(&root, tree->header().root_page);
+    tree->load(root, tree->header().root_page);
 
     if (tree->header().height == 0)
         return "tree has no height";
@@ -161,7 +161,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
     while (height > 1)
     {
         bp_tree_node<N> node;
-        tree->load(&node, current_page);
+        tree->load(node, current_page);
         next_row_first_page = node.children[0].page;
 
         result = validate_bp_tree_node(tree, node, current_page, current_prev_page, height <= 2);
@@ -177,7 +177,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
     // Validate leaf level
     auto current_leaf_page = next_row_first_page;
     bp_tree_leaf<N> leaf;
-    tree->load(&leaf, current_leaf_page);
+    tree->load(leaf, current_leaf_page);
     current_prev_page = 0;
 
     result = validate_bp_tree_leaf(tree, leaf, current_leaf_page, current_prev_page);
@@ -187,7 +187,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
     while (leaf.next_page)
     {
         bp_tree_leaf<N> leaf_prev;
-        tree->load(&leaf_prev, leaf.prev_page);
+        tree->load(leaf_prev, leaf.prev_page);
 
         result = validate_bp_tree_leaf(tree, leaf, current_leaf_page, current_prev_page);
         if (!result.valid)
@@ -195,7 +195,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 
         current_prev_page = current_leaf_page;
         current_leaf_page = leaf.next_page;
-        tree->load(&leaf, current_leaf_page);
+        tree->load(leaf, current_leaf_page);
     }
 
     return true;

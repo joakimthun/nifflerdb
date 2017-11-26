@@ -29,7 +29,7 @@ namespace niffler {
         bp_tree<N>::assert_sizes();
         
         auto t = std::make_unique<bp_tree<N>>(pager);
-        t->load(&t->header_, HEADER_PAGE_INDEX);
+        t->load(t->header_, HEADER_PAGE_INDEX);
         
         return result<bp_tree<N>>(true, std::move(t));
     }
@@ -65,9 +65,9 @@ namespace niffler {
         root.num_children = 1;
 
         // Save inital tree to the underlying storage
-        t->save(&t->header_, HEADER_PAGE_INDEX);
-        t->save(&root, root_page.index);
-        t->save(&leaf, leaf_page.index);
+        t->save(t->header_, HEADER_PAGE_INDEX);
+        t->save(root, root_page.index);
+        t->save(leaf, leaf_page.index);
 
         auto sync_result = pager->sync();
         return result<bp_tree<N>>(sync_result, std::move(t));
@@ -89,7 +89,7 @@ namespace niffler {
         do
         {
             bp_tree_node<N> n;
-            load(&n, current_page);
+            load(n, current_page);
             print_node_level(ss, current_page);
             ss << std::endl;
 
@@ -109,13 +109,13 @@ namespace niffler {
         assert(parent_page != 0);
 
         bp_tree_node<N> parent;
-        load(&parent, parent_page);
+        load(parent, parent_page);
 
         auto leaf_page = search_node(parent, key);
         assert(leaf_page != 0);
 
         bp_tree_leaf<N> leaf;
-        load(&leaf, leaf_page);
+        load(leaf, leaf_page);
 
         return binary_search_record(leaf, key) >= 0;
     }
@@ -155,7 +155,7 @@ namespace niffler {
         assert(leaf_page != 0);
 
         bp_tree_leaf<N> leaf;
-        load(&leaf, leaf_page);
+        load(leaf, leaf_page);
 
         // Key already exists
         if (binary_search_record(leaf, key) >= 0)
@@ -170,7 +170,7 @@ namespace niffler {
         else
         {
             insert_record_non_full(leaf, key, value);
-            save(&leaf, leaf_page);
+            save(leaf, leaf_page);
         }
 
         return true;
@@ -183,13 +183,13 @@ namespace niffler {
         assert(parent_page != 0);
 
         bp_tree_node<N> parent;
-        load(&parent, parent_page);
+        load(parent, parent_page);
 
         auto leaf_page = search_node(parent, key);
         assert(leaf_page != 0);
 
         bp_tree_leaf<N> leaf;
-        load(&leaf, leaf_page);
+        load(leaf, leaf_page);
 
         // Return false if the key does not exists
         if (!remove_record(leaf, key))
@@ -208,7 +208,7 @@ namespace niffler {
 
                 if (merge_result.parent_page != parent_page)
                 {
-                    load(&parent, merge_result.parent_page);
+                    load(parent, merge_result.parent_page);
                     remove_by_page(merge_result.parent_page, parent, merge_result.page_to_delete);
                 }
                 else
@@ -218,12 +218,12 @@ namespace niffler {
             }
             else
             {
-                save(&leaf, leaf_page);
+                save(leaf, leaf_page);
             }
         }
         else
         {
-            save(&leaf, leaf_page);
+            save(leaf, leaf_page);
         }
 
         return true;
@@ -244,8 +244,8 @@ namespace niffler {
             root.children[0].page = left_page;
             root.children[1].page = right_page;
 
-            save(&header_, HEADER_PAGE_INDEX);
-            save(&root, header_.root_page);
+            save(header_, HEADER_PAGE_INDEX);
+            save(root, header_.root_page);
 
             set_parent_ptr(root.children, root.num_children, header_.root_page);
 
@@ -253,7 +253,7 @@ namespace niffler {
         }
 
         bp_tree_node<N> node;
-        load(&node, node_page);
+        load(node, node_page);
 
         if (node.num_children == header_.order)
         {
@@ -295,8 +295,8 @@ namespace niffler {
                 insert_key_non_full(node, key, right_page);
             }
 
-            save(&node, node_page);
-            save(&new_node, new_node_page);
+            save(node, node_page);
+            save(new_node, new_node_page);
             set_parent_ptr(new_node.children, new_node.num_children, new_node_page);
 
             // Insert the middle key into the parent node
@@ -305,7 +305,7 @@ namespace niffler {
         else
         {
             insert_key_non_full(node, key, right_page);
-            save(&node, node_page);
+            save(node, node_page);
         }
     }
 
@@ -366,9 +366,9 @@ namespace niffler {
         bp_tree_node<N> node;
         for (auto i = 0u; i < c_length; i++)
         {
-            load(&node, children[i].page);
+            load(node, children[i].page);
             node.parent_page = parent_page;
-            save(&node, children[i].page);
+            save(node, children[i].page);
         }
     }
 
@@ -406,12 +406,12 @@ namespace niffler {
             free(node, header_.root_page);
             header_.height--;
             header_.root_page = node.children[0].page;
-            save(&header_, HEADER_PAGE_INDEX);
+            save(header_, HEADER_PAGE_INDEX);
 
             bp_tree_node<N> root;
-            load(&root, header().root_page);
+            load(root, header().root_page);
             root.parent_page = 0;
-            save(&root, header().root_page);
+            save(root, header().root_page);
             return;
         }
 
@@ -424,17 +424,17 @@ namespace niffler {
                 auto merge_result = merge_node(node, node_page, node.next_page == 0);
 
                 bp_tree_node<N> parent;
-                load(&parent, merge_result.parent_page);
+                load(parent, merge_result.parent_page);
                 remove_by_page(merge_result.parent_page, parent, merge_result.page_to_delete);
             }
             else
             {
-                save(&node, node_page);
+                save(node, node_page);
             }
         }
         else
         {
-            save(&node, node_page);
+            save(node, node_page);
         }
     }
 
@@ -461,7 +461,7 @@ namespace niffler {
         }
 
         bp_tree_node<N> lender;
-        load(&lender, lender_page);
+        load(lender, lender_page);
         assert(lender.num_children >= MIN_NUM_CHILDREN());
 
         // If the lender don't have enough keys we can't borrow from it 
@@ -516,10 +516,10 @@ namespace niffler {
                 promote_larger_key(lender.children[src_index].key, node_page, borrower.parent_page);
             }
 
-            load(&parent, borrower.parent_page);
+            load(parent, borrower.parent_page);
             const auto parent_key_index = find_parent_node_index(parent, borrower.children[borrower.num_children - 1].key);
             parent.children[parent_key_index].key = lender.children[0].key;
-            save(&parent, borrower.parent_page);
+            save(parent, borrower.parent_page);
         }
         else
         {
@@ -532,10 +532,10 @@ namespace niffler {
                 promote_smaller_key(lender.children[src_index - 1].key, lender_page, lender.parent_page);
             }
 
-            load(&parent, lender.parent_page);
+            load(parent, lender.parent_page);
             const auto parent_key_index = find_insert_index(parent, lender.children[0].key);
             parent.children[parent_key_index].key = lender.children[src_index - 1].key;
-            save(&parent, lender.parent_page);
+            save(parent, lender.parent_page);
         }
 
         auto& src = lender.children[src_index];
@@ -543,13 +543,13 @@ namespace niffler {
 
         // Change the borrowed node's parent
         bp_tree_node<N> child;
-        load(&child, lender.children[src_index].page);
+        load(child, lender.children[src_index].page);
         child.parent_page = node_page;
-        save(&child, lender.children[src_index].page);
+        save(child, lender.children[src_index].page);
 
         // Remove the borrowed key from the lender
         remove_key_at(lender, src_index);
-        save(&lender, lender_page);
+        save(lender, lender_page);
 
         return true;
     }
@@ -584,12 +584,12 @@ namespace niffler {
             result.page_to_delete = node_page;
 
             bp_tree_node<N> prev;
-            load(&prev, node.prev_page);
+            load(prev, node.prev_page);
 
             set_parent_ptr(node.children, node.num_children, node.prev_page);
             merge_nodes(prev, node);
             remove(prev, node);
-            save(&prev, node.prev_page);
+            save(prev, node.prev_page);
         }
         else
         {
@@ -597,7 +597,7 @@ namespace niffler {
             assert(node.next_page != 0);
 
             bp_tree_node<N> next;
-            load(&next, node.next_page);
+            load(next, node.next_page);
 
             result.parent_page = next.parent_page;
             result.page_to_delete = node.next_page;
@@ -606,14 +606,14 @@ namespace niffler {
             if (!has_same_parent)
             {
                 bp_tree_node<N> next_parent;
-                load(&next_parent, next.parent_page);
+                load(next_parent, next.parent_page);
                 promote_larger_key(next_parent.children[0].key, node_page, node.parent_page);
             }
 
             set_parent_ptr(next.children, next.num_children, node_page);
             merge_nodes(node, next);
             remove(node, next);
-            save(&node, node_page);
+            save(node, node_page);
         }
 
         return result;
@@ -658,13 +658,13 @@ namespace niffler {
 
         assert(parent_page != 0);
         bp_tree_node<N> parent;
-        load(&parent, parent_page);
+        load(parent, parent_page);
         auto& child = find_node_child(parent, old_key);
         assert(child.key > old_key);
         const auto is_last_child = child.key == parent.children[parent.num_children - 1].key;
 
         child.key = new_key;
-        save(&parent, parent_page);
+        save(parent, parent_page);
 
         if (is_last_child && parent.parent_page)
         {
@@ -716,7 +716,7 @@ namespace niffler {
         }
 
         bp_tree_leaf<N> lender;
-        load(&lender, lender_page);
+        load(lender, lender_page);
         assert(lender.num_children >= MIN_NUM_CHILDREN());
 
         // If the lender don't have enough keys we can't borrow from it 
@@ -745,7 +745,7 @@ namespace niffler {
         insert_record_at(borrower, src.key, src.value, dest_index);
 
         remove_record_at(lender, src_index);
-        save(&lender, lender_page);
+        save(lender, lender_page);
 
         return true;
     }
@@ -764,11 +764,11 @@ namespace niffler {
             result.page_to_delete = leaf_page;
 
             bp_tree_leaf<N> prev;
-            load(&prev, leaf.prev_page);
+            load(prev, leaf.prev_page);
 
             merge_leafs(prev, leaf);
             remove(prev, leaf);
-            save(&prev, leaf.prev_page);
+            save(prev, leaf.prev_page);
         }
         else
         {
@@ -776,7 +776,7 @@ namespace niffler {
             assert(leaf.next_page != 0);
 
             bp_tree_leaf<N> next;
-            load(&next, leaf.next_page);
+            load(next, leaf.next_page);
 
             result.parent_page = next.parent_page;
             result.page_to_delete = leaf.next_page;
@@ -785,13 +785,13 @@ namespace niffler {
             if (!has_same_parent)
             {
                 bp_tree_node<N> next_parent;
-                load(&next_parent, next.parent_page);
+                load(next_parent, next.parent_page);
                 promote_larger_key(next_parent.children[0].key, leaf_page, leaf.parent_page);
             }
 
             merge_leafs(leaf, next);
             remove(leaf, next);
-            save(&leaf, leaf_page);
+            save(leaf, leaf_page);
         }
 
         return result;
@@ -873,8 +873,8 @@ namespace niffler {
             insert_record_non_full(leaf, key, value);
         }
 
-        save(&leaf, leaf_page);
-        save(&new_leaf, new_leaf_page);
+        save(leaf, leaf_page);
+        save(new_leaf, new_leaf_page);
     }
 
     template<u32 N>
@@ -920,7 +920,7 @@ namespace niffler {
     void bp_tree<N>::promote_larger_key(const key &key_to_promote, page_index node_page, page_index parent_page)
     {
         bp_tree_node<N> parent;
-        load(&parent, parent_page);
+        load(parent, parent_page);
 
         bool set = false;
 
@@ -934,7 +934,7 @@ namespace niffler {
                 }
 
                 parent.children[i].key = key_to_promote;
-                save(&parent, parent_page);
+                save(parent, parent_page);
                 set = true;
                 break;
             }
@@ -952,7 +952,7 @@ namespace niffler {
     void bp_tree<N>::promote_smaller_key(const key & key_to_promote, page_index node_page, page_index parent_page)
     {
         bp_tree_node<N> parent;
-        load(&parent, parent_page);
+        load(parent, parent_page);
 
         bool set = false;
 
@@ -966,7 +966,7 @@ namespace niffler {
                 }
 
                 parent.children[i].key = key_to_promote;
-                save(&parent, parent_page);
+                save(parent, parent_page);
                 set = true;
 
                 if (parent.children[parent.num_children - 1].key > key_to_promote)
@@ -1021,7 +1021,7 @@ namespace niffler {
         while (height > 1)
         {
             bp_tree_node<N> node;
-            load(&node, current_page);
+            load(node, current_page);
             current_page = find_node_child(node, key).page;
             height -= 1;
         }
@@ -1033,7 +1033,7 @@ namespace niffler {
     page_index bp_tree<N>::search_node(page_index page, const key &key) const
     {
         bp_tree_node<N> node;
-        load(&node, page);
+        load(node, page);
         return find_node_child(node, key).page;
     }
 
@@ -1185,12 +1185,12 @@ namespace niffler {
         if (new_node.next_page != 0)
         {
             T old_next;
-            load(&old_next, new_node.next_page);
+            load(old_next, new_node.next_page);
             old_next.prev_page = node.next_page;
-            save(&old_next, new_node.next_page);
+            save(old_next, new_node.next_page);
         }
 
-        save(&header_, HEADER_PAGE_INDEX);
+        save(header_, HEADER_PAGE_INDEX);
         return node.next_page;
     }
 
@@ -1198,7 +1198,7 @@ namespace niffler {
     void bp_tree<N>::print_node_level(stringstream &ss, page_index node_page) const
     {
         bp_tree_node<N> n;
-        load(&n, node_page);
+        load(n, node_page);
 
         ss << "[PG:" << node_page << " P:" << n.parent_page << " PR:" << n.prev_page << " N:" << n.next_page << " {";
 
@@ -1223,7 +1223,7 @@ namespace niffler {
     void bp_tree<N>::print_leaf_level(stringstream &ss, page_index leaf_page) const
     {
         bp_tree_leaf<N> l;
-        load(&l, leaf_page);
+        load(l, leaf_page);
 
         ss << "[PG:" << leaf_page << " P:" << l.parent_page << " PR:" << l.prev_page << " N:" << l.next_page << " {";
 
@@ -1263,34 +1263,65 @@ namespace niffler {
         if (node.next_page != 0) {
             // Point node's right neighbour's prev ptr to "prev"
             T next;
-            load(&next, node.next_page);
+            load(next, node.next_page);
             next.prev_page = node.prev_page;
-            save(&next, node.next_page);
+            save(next, node.next_page);
         }
 
-        save(&header_, HEADER_PAGE_INDEX);
+        save(header_, HEADER_PAGE_INDEX);
     }
 
     template<u32 N>
     template<class T>
-    void bp_tree<N>::load(T *buffer, page_index page) const
+    void bp_tree<N>::load(T &t, page_index page) const
     {
-        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value || std::is_same<T, bp_tree_header>::value, "T must be a node, leaf or header");
         assert(sizeof(T) <= PAGE_SIZE);
 
         auto& page_to_load = pager_->get_page(page);
-        memcpy(buffer, page_to_load.content, sizeof(T));
+
+        if constexpr (std::is_same<T, bp_tree_node<N>>::value)
+        {
+            deserialize_bp_tree_node(page_to_load.content, t);
+        }
+        else if constexpr (std::is_same<T, bp_tree_leaf<N>>::value)
+        {
+            deserialize_bp_tree_leaf(page_to_load.content, t);
+        }
+        else if constexpr (std::is_same<T, bp_tree_header>::value)
+        {
+            deserialize_bp_tree_header(page_to_load.content, t);
+        }
+        else
+        {
+            static_assert(false, "bp_tree<N>::load: Unsupported type");
+        }
     }
 
     template<u32 N>
     template<class T>
-    void bp_tree<N>::save(T *value, page_index page) const
+    void bp_tree<N>::save(const T &t, page_index page) const
     {
-        static_assert(std::is_same<T, bp_tree_node<N>>::value || std::is_same<T, bp_tree_leaf<N>>::value || std::is_same<T, bp_tree_header>::value, "T must be a node, leaf or header");
         assert(sizeof(T) <= PAGE_SIZE);
 
         auto& page_to_save = pager_->get_page(page);
-        memcpy(page_to_save.content, value, sizeof(T));
+
+        if constexpr (std::is_same<T, bp_tree_node<N>>::value)
+        {
+            serialize_bp_tree_node(page_to_save.content, t);
+        }
+        else if constexpr (std::is_same<T, bp_tree_leaf<N>>::value)
+        {
+            serialize_bp_tree_leaf(page_to_save.content, t);
+        }
+        else if constexpr (std::is_same<T, bp_tree_header>::value)
+        {
+            serialize_bp_tree_header(page_to_save.content, t);
+        }
+        else
+        {
+            static_assert(false, "bp_tree<N>::save: Unsupported type");
+        }
+
         page_to_save.dirty = true;
     }
 

@@ -12,7 +12,7 @@ namespace niffler {
     }
 
     static
-    u32 read_u32(u8 **buffer)
+    u32 read_u32(const u8 **buffer)
     {
         const auto value = (u32*)*buffer;
         *buffer += sizeof(u32);
@@ -27,7 +27,7 @@ namespace niffler {
     }
 
     static
-    int read_int(u8 **buffer)
+    int read_int(const u8 **buffer)
     {
         const auto value = (int*)*buffer;
         *buffer += sizeof(int);
@@ -48,7 +48,7 @@ namespace niffler {
         write_u32(&buffer, header.leaf_page);
     }
 
-    void deserialize_bp_tree_header(u8 *buffer, bp_tree_header &header)
+    void deserialize_bp_tree_header(const u8 *buffer, bp_tree_header &header)
     {
         static_assert(sizeof(page_index) == sizeof(u32));
 
@@ -80,7 +80,7 @@ namespace niffler {
     }
 
     template<u32 N>
-    void deserialize_bp_tree_node(u8 *buffer, bp_tree_node<N> &node)
+    void deserialize_bp_tree_node(const u8 *buffer, bp_tree_node<N> &node)
     {
         node.parent_page = read_u32(&buffer);
         node.next_page = read_u32(&buffer);
@@ -113,7 +113,7 @@ namespace niffler {
     }
 
     template<u32 N>
-    void deserialize_bp_tree_leaf(u8 *buffer, bp_tree_leaf<N> &leaf)
+    void deserialize_bp_tree_leaf(const u8 *buffer, bp_tree_leaf<N> &leaf)
     {
         leaf.parent_page = read_u32(&buffer);
         leaf.next_page = read_u32(&buffer);
@@ -136,13 +136,13 @@ namespace niffler {
     template void serialize_bp_tree_leaf(u8 *buffer, const bp_tree_leaf<10> &node);
     template void serialize_bp_tree_leaf(u8 *buffer, const bp_tree_leaf<DEFAULT_TREE_ORDER> &node);
 
-    template void deserialize_bp_tree_node(u8 *buffer, bp_tree_node<4> &node);
-    template void deserialize_bp_tree_node(u8 *buffer, bp_tree_node<6> &node);
-    template void deserialize_bp_tree_node(u8 *buffer, bp_tree_node<10> &node);
-    template void deserialize_bp_tree_node(u8 *buffer, bp_tree_node<DEFAULT_TREE_ORDER> &node);
-    template void deserialize_bp_tree_leaf(u8 *buffer, bp_tree_leaf<4> &node);
-    template void deserialize_bp_tree_leaf(u8 *buffer, bp_tree_leaf<6> &node);
-    template void deserialize_bp_tree_leaf(u8 *buffer, bp_tree_leaf<10> &node);
-    template void deserialize_bp_tree_leaf(u8 *buffer, bp_tree_leaf<DEFAULT_TREE_ORDER> &node);
+    template void deserialize_bp_tree_node(const u8 *buffer, bp_tree_node<4> &node);
+    template void deserialize_bp_tree_node(const u8 *buffer, bp_tree_node<6> &node);
+    template void deserialize_bp_tree_node(const u8 *buffer, bp_tree_node<10> &node);
+    template void deserialize_bp_tree_node(const u8 *buffer, bp_tree_node<DEFAULT_TREE_ORDER> &node);
+    template void deserialize_bp_tree_leaf(const u8 *buffer, bp_tree_leaf<4> &node);
+    template void deserialize_bp_tree_leaf(const u8 *buffer, bp_tree_leaf<6> &node);
+    template void deserialize_bp_tree_leaf(const u8 *buffer, bp_tree_leaf<10> &node);
+    template void deserialize_bp_tree_leaf(const u8 *buffer, bp_tree_leaf<DEFAULT_TREE_ORDER> &node);
 
 }
