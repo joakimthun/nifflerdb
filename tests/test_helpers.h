@@ -8,8 +8,7 @@
 
 #include "files.h"
 #include "bp_tree.h"
-#include "memory_storage_provider.h"
-#include "file_storage_provider.h"
+#include "pager.h"
 
 using namespace niffler;
 
@@ -33,16 +32,15 @@ struct bp_tree_validation_result {
 template<size_t N>
 bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree);
 
-inline std::unique_ptr<storage_provider> create_storage_provider(const char *file_path, file_mode fm = file_mode::write_update)
+inline std::unique_ptr<pager> create_pager(const char *file_path, file_mode fm = file_mode::write_update)
 {
-    //return std::make_unique<file_storage_provider>(file_path, file_mode::write_update);
-    //return std::make_unique<memory_storage_provider>();
-    return std::make_unique<memory_storage_provider>(std::make_unique<file_storage_provider>(file_path, fm));
+    return std::make_unique<pager>(file_path, fm);
 }
 
 inline void random_keys_test(std::size_t rand_seed, std::size_t num_keys)
 {
-    auto t = bp_tree<DEFAULT_TREE_ORDER>::create(create_storage_provider("files/random_keys_test.ndb")).value;
+    auto p = create_pager("files/random_keys_test.ndb");
+    auto t = bp_tree<DEFAULT_TREE_ORDER>::create(p.get()).value;
     srand(rand_seed);
     auto added_keys = std::unordered_set<int>();
 

@@ -1,6 +1,7 @@
 #include "files.h"
 
 #include <string.h>
+#include <assert.h>
 
 #if (defined _WIN32 || defined __WIN32__)
 
@@ -37,6 +38,7 @@ namespace niffler {
     {
         strcpy_s(file_path, FILE_PATH_BUFFER_SIZE, path);
         fopen_s(&file, file_path, get_file_mode(mode));
+        assert(file != nullptr);
     }
 
     file_handle::~file_handle()

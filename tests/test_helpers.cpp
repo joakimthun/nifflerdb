@@ -1,11 +1,11 @@
 #include "test_helpers.h"
 
 template<size_t N>
-bool find_key_for_node_offset(const bp_tree_node<N> &node, offset target, key *key)
+bool find_key_for_node_page(const bp_tree_node<N> &node, page_index target_page, key *key)
 {
     for (auto i = 0u; i < node.num_children; i++)
     {
-        if (node.children[i].offset == target)
+        if (node.children[i].page == target_page)
         {
             *key = node.children[i].key;
             return true;
@@ -16,18 +16,18 @@ bool find_key_for_node_offset(const bp_tree_node<N> &node, offset target, key *k
 }
 
 template<size_t N>
-bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tree, bp_tree_leaf<N> &leaf, offset current_offset, offset prev_offset)
+bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tree, bp_tree_leaf<N> &leaf, page_index current_page, page_index prev_page)
 {
-    if (leaf.prev != prev_offset)
+    if (leaf.prev_page != prev_page)
         return "leaf points to wrong left neighbour";
 
     bp_tree_node<N> leaf_parent;
-    tree->load(&leaf_parent, leaf.parent);
-    auto is_root_descendant = leaf_parent.parent == 0;
+    tree->load(&leaf_parent, leaf.parent_page);
+    auto is_root_descendant = leaf_parent.parent_page == 0;
 
     // If this leaf is a direct child of the root node it cant be within the valid children range
     // e.g. only 1 key in the tree
-    if (!is_root_descendant)
+    if (!is_root_descendant || (leaf.prev_page != 0 || leaf.next_page != 0))
     {
         if (leaf.num_children < tree->MIN_NUM_CHILDREN())
             return "leaf has to few children";
@@ -37,7 +37,7 @@ bp_tree_validation_result validate_bp_tree_leaf(std::unique_ptr<bp_tree<N>> &tre
     }
 
     key parent_key;
-    if (!find_key_for_node_offset(leaf_parent, current_offset, &parent_key))
+    if (!find_key_for_node_page(leaf_parent, current_page, &parent_key))
     {
         return "leaf points to wrong parent";
     }
@@ -67,7 +67,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
         {
             auto& child = node.children[i];
             bp_tree_leaf<N> leaf;
-            tree->load(&leaf, child.offset);
+            tree->load(&leaf, child.page);
 
             for (auto j = 0u; j < leaf.num_children - 1; j++)
             {
@@ -84,7 +84,7 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
         {
             auto& child = node.children[i];
             bp_tree_node<N> child_node;
-            tree->load(&child_node, child.offset);
+            tree->load(&child_node, child.page);
 
             for (auto j = 0u; j < child_node.num_children - 1; j++)
             {
@@ -100,17 +100,17 @@ bp_tree_validation_result validate_bp_tree_keys(std::unique_ptr<bp_tree<N>> &tre
 }
 
 template<size_t N>
-bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree<N>> &tree, bp_tree_node<N> &node, offset current_offset, offset prev_offset, bool last_nlevel)
+bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree<N>> &tree, bp_tree_node<N> &node, page_index current_page, page_index prev_page, bool last_nlevel)
 {
     for (auto i = 0u; i < node.num_children; i++)
     {
         bp_tree_node<N> node_child;
-        tree->load(&node_child, node.children[i].offset);
-        if (node_child.parent != current_offset)
+        tree->load(&node_child, node.children[i].page);
+        if (node_child.parent_page != current_page)
             return "node points to wrong parent";
     }
 
-    if (node.prev != prev_offset)
+    if (node.prev_page != prev_page)
         return "node points to wrong left neighbour";
 
     if (node.num_children < tree->MIN_NUM_CHILDREN())
@@ -123,11 +123,11 @@ bp_tree_validation_result validate_bp_tree_node(std::unique_ptr<bp_tree<N>> &tre
     if (!result.valid)
         return result;
 
-    if (node.next)
+    if (node.next_page)
     {
         bp_tree_node<N> next_node;
-        tree->load(&next_node, node.next);
-        return validate_bp_tree_node(tree, next_node, node.next, current_offset, last_nlevel);
+        tree->load(&next_node, node.next_page);
+        return validate_bp_tree_node(tree, next_node, node.next_page, current_page, last_nlevel);
     }
 
     return true;
@@ -137,12 +137,12 @@ template<size_t N>
 bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 {
     bp_tree_node<N> root;
-    tree->load(&root, tree->header().root_offset);
+    tree->load(&root, tree->header().root_page);
 
     if (tree->header().height == 0)
         return "tree has no height";
 
-    if (root.parent != 0)
+    if (root.parent_page != 0)
         return "root has parent";
 
     if (root.num_children == 0)
@@ -153,49 +153,49 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
         return result;
 
     auto height = tree->header().height;
-    auto current_parent_offset = tree->header().root_offset;
-    auto current_prev_offset = 0;
-    auto current_offset = root.children[0].offset;
-    auto next_row_first_offset = root.children[0].offset;
+    auto current_parent_page = tree->header().root_page;
+    auto current_prev_page = 0;
+    auto current_page = root.children[0].page;
+    auto next_row_first_page = root.children[0].page;
 
     while (height > 1)
     {
         bp_tree_node<N> node;
-        tree->load(&node, current_offset);
-        next_row_first_offset = node.children[0].offset;
+        tree->load(&node, current_page);
+        next_row_first_page = node.children[0].page;
 
-        result = validate_bp_tree_node(tree, node, current_offset, current_prev_offset, height <= 2);
+        result = validate_bp_tree_node(tree, node, current_page, current_prev_page, height <= 2);
         if (!result.valid)
             return result;
 
-        current_parent_offset = current_offset;
-        current_prev_offset = 0;
-        current_offset = next_row_first_offset;
+        current_parent_page = current_page;
+        current_prev_page = 0;
+        current_page = next_row_first_page;
         height--;
     }
 
     // Validate leaf level
-    auto current_leaf_offset = next_row_first_offset;
+    auto current_leaf_page = next_row_first_page;
     bp_tree_leaf<N> leaf;
-    tree->load(&leaf, current_leaf_offset);
-    current_prev_offset = 0;
+    tree->load(&leaf, current_leaf_page);
+    current_prev_page = 0;
 
-    result = validate_bp_tree_leaf(tree, leaf, current_leaf_offset, current_prev_offset);
+    result = validate_bp_tree_leaf(tree, leaf, current_leaf_page, current_prev_page);
     if (!result.valid)
         return result;
 
-    while (leaf.next)
+    while (leaf.next_page)
     {
         bp_tree_leaf<N> leaf_prev;
-        tree->load(&leaf_prev, leaf.prev);
+        tree->load(&leaf_prev, leaf.prev_page);
 
-        result = validate_bp_tree_leaf(tree, leaf, current_leaf_offset, current_prev_offset);
+        result = validate_bp_tree_leaf(tree, leaf, current_leaf_page, current_prev_page);
         if (!result.valid)
             return result;
 
-        current_prev_offset = current_leaf_offset;
-        current_leaf_offset = leaf.next;
-        tree->load(&leaf, current_leaf_offset);
+        current_prev_page = current_leaf_page;
+        current_leaf_page = leaf.next_page;
+        tree->load(&leaf, current_leaf_page);
     }
 
     return true;

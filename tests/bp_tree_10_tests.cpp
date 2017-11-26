@@ -8,7 +8,8 @@ using namespace niffler;
 
 TEST(BP_TREE_10, LEAF_BINARY_SEARCH)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> leaf;
     EXPECT_EQ(-1, t->binary_search_record(leaf, 0));
     
@@ -40,7 +41,8 @@ TEST(BP_TREE_10, LEAF_BINARY_SEARCH)
 
 TEST(BP_TREE_10, INSERT_NODE_AT)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_node<10> node;
 
     t->insert_node_at(node, -1, 0, 0);
@@ -82,7 +84,8 @@ TEST(BP_TREE_10, INSERT_NODE_AT)
 
 TEST(BP_TREE_10, INSERT_RECORD_AT)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> leaf;
 
     t->insert_record_at(leaf, -1, 0, 0);
@@ -124,35 +127,37 @@ TEST(BP_TREE_10, INSERT_RECORD_AT)
 
 TEST(BP_TREE_10, INSERT_KEY_AT)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_node<10> node;
 
     t->insert_key_at(node, -1, 1, 0);
     EXPECT_EQ(1, node.num_children);
     EXPECT_EQ(-1, node.children[0].key);
-    EXPECT_EQ(1, node.children[0].offset);
+    EXPECT_EQ(1, node.children[0].page);
 
     t->insert_key_at(node, 0, 1, 1);
     EXPECT_EQ(2, node.num_children);
     EXPECT_EQ(0, node.children[1].key);
-    EXPECT_EQ(1, node.children[1].offset);
+    EXPECT_EQ(1, node.children[1].page);
 
     t->insert_key_at(node, 2, 1, 2);
     EXPECT_EQ(3, node.num_children);
     EXPECT_EQ(2, node.children[2].key);
-    EXPECT_EQ(1, node.children[2].offset);
+    EXPECT_EQ(1, node.children[2].page);
 
     t->insert_key_at(node, 1, 1, 2);
     EXPECT_EQ(4, node.num_children);
     EXPECT_EQ(1, node.children[2].key);
-    EXPECT_EQ(1, node.children[2].offset);
+    EXPECT_EQ(1, node.children[2].page);
     EXPECT_EQ(2, node.children[3].key);
-    EXPECT_EQ(1, node.children[3].offset);
+    EXPECT_EQ(1, node.children[3].page);
 }
 
 TEST(BP_TREE_10, FIND_INSERT_INDEX_NODE)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
 
     bp_tree_node<10> node;
     node.children[0] = bp_tree_node_child{ 0, 0 };
@@ -173,7 +178,8 @@ TEST(BP_TREE_10, FIND_INSERT_INDEX_NODE)
 
 TEST(BP_TREE_10, FIND_INSERT_INDEX_LEAF)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
 
     bp_tree_leaf<10> leaf;
     leaf.children[0] = bp_tree_record{ 0, 0 };
@@ -194,7 +200,8 @@ TEST(BP_TREE_10, FIND_INSERT_INDEX_LEAF)
 
 TEST(BP_TREE_10, INSERT_RECORD_NON_FULL)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> leaf;
 
     t->insert_record_non_full(leaf, -1, 0);
@@ -236,7 +243,8 @@ TEST(BP_TREE_10, INSERT_RECORD_NON_FULL)
 
 TEST(BP_TREE_10, TRANSFER_RECORDS)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
 
     bp_tree_leaf<10> source;
     source.children[0] = bp_tree_record{ 1, 0 };
@@ -281,7 +289,8 @@ TEST(BP_TREE_10, TRANSFER_RECORDS)
 
 TEST(BP_TREE_10, INSERT_NON_SPLIT)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
 
     for (auto i = 0u; i < t->MAX_NUM_CHILDREN(); i++)
     {
@@ -292,7 +301,8 @@ TEST(BP_TREE_10, INSERT_NON_SPLIT)
 
 TEST(BP_TREE_10, INSERT_1000_KEYS)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     const auto num_keys = 25;
 
     for (auto i = 0; i < num_keys; i++)
@@ -310,7 +320,8 @@ TEST(BP_TREE_10, INSERT_1000_KEYS)
 
 TEST(BP_TREE_10, INSERT_1000_RANDOM_KEYS)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     const auto num_keys = 1000;
     srand(99);
 
@@ -326,7 +337,8 @@ TEST(BP_TREE_10, INSERT_1000_RANDOM_KEYS)
 
 TEST(BP_TREE_10, REMOVE_RECORD_AT)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> leaf;
     leaf.children[0] = bp_tree_record{ 0, 0 };
     leaf.children[1] = bp_tree_record{ 1, 0 };
@@ -361,7 +373,8 @@ TEST(BP_TREE_10, REMOVE_RECORD_AT)
 
 TEST(BP_TREE_10, REMOVE_RECORD)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> leaf;
     leaf.children[0] = bp_tree_record{ 0, 0 };
     leaf.children[1] = bp_tree_record{ 1, 0 };
@@ -396,7 +409,8 @@ TEST(BP_TREE_10, REMOVE_RECORD)
 
 TEST(BP_TREE_10, REMOVE_NO_MERGE_BORROW)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     const auto num_keys = 250;
 
     for (auto i = 0; i < num_keys; i++)
@@ -434,7 +448,8 @@ TEST(BP_TREE_10, REMOVE_NO_MERGE_BORROW)
 
 TEST(BP_TREE_10, REMOVE_NO_MERGE)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     const auto num_keys = 250;
 
     for (auto i = 0; i < num_keys; i++)
@@ -462,7 +477,8 @@ TEST(BP_TREE_10, REMOVE_NO_MERGE)
 
 TEST(BP_TREE_10, MERGE_LEAFS)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> first;
     bp_tree_leaf<10> second;
 
@@ -497,7 +513,8 @@ TEST(BP_TREE_10, MERGE_LEAFS)
 
 TEST(BP_TREE_10, ADD_REMOVE_100_X2)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     const auto num_keys = 100;
 
     for (auto i = 0; i < num_keys; i++)
@@ -531,7 +548,8 @@ TEST(BP_TREE_10, ADD_REMOVE_100_X2)
 
 TEST(BP_TREE_10, ADD_REMOVE_1000)
 {
-    auto t = bp_tree<10>::create(create_storage_provider("files/test_10.ndb")).value;
+    auto p = create_pager("files/test_10.ndb");
+    auto t = bp_tree<10>::create(p.get()).value;
     const auto num_keys = 1000;
 
     for (auto i = 0; i < num_keys; i++)

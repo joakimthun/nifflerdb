@@ -6,6 +6,7 @@
 namespace niffler {
 
     constexpr size_t PAGE_SIZE = 4096;
-    using offset = std::size_t;
+    constexpr size_t DEFAULT_PAGER_SIZE = 1000;
+    using page_index = std::size_t;
     using u8 = uint8_t;
 }
