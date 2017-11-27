@@ -1,3 +1,3 @@
 # NifflerDB
 
-Simple and persistent key-value store written in c++.
+NifflerDB is a simple and persistent key-value store written in c++.
