@@ -13,14 +13,9 @@ namespace niffler {
     {
         pages_.resize(DEFAULT_PAGER_SIZE);
 
-        header_.page_size = PAGE_SIZE;
-        header_.num_pages = 1;
-        header_.first_free_list_page = 0;
-        header_.num_free_list_pages = 0;
-
-        /*if (truncate_existing_file)
+        if (truncate_existing_file)
         {
-            strcpy_s(header_.version, 16, "Niffler DB 0.1");
+            strcpy_s(header_.version, sizeof(header_.version), "NifflerDB 0.1");
             header_.page_size = PAGE_SIZE;
             header_.num_pages = 1;
             header_.first_free_list_page = 0;
@@ -33,9 +28,11 @@ namespace niffler {
         }
         else
         {
-            auto& header_page = get_page(0);
-            deserialize_file_header(header_page.content, header_);
-        }*/
+            u8 buffer[file_header::DISK_SIZE()];
+            fseek(file_handle_.file, 0, SEEK_SET);
+            fread(buffer, file_header::DISK_SIZE(), 1, file_handle_.file);
+            deserialize_file_header(buffer, header_);
+        }
     }
 
     pager::~pager()

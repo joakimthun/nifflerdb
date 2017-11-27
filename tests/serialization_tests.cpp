@@ -7,10 +7,8 @@ using namespace niffler;
 
 TEST(SERIALIZATION, FILE_HEADER)
 {
-    const auto version = "TEST";
-
     file_header h1 = { 0 };
-    strcpy_s(h1.version, 16, version);
+    strcpy_s(h1.version, sizeof(h1.version), "NifflerDB 0.1");
     h1.page_size = 1;
     h1.num_pages = 2;
     h1.first_free_list_page = 3;
@@ -22,7 +20,7 @@ TEST(SERIALIZATION, FILE_HEADER)
     file_header h2 = { 0 };
     deserialize_file_header(buffer, h2);
 
-    ASSERT_STREQ(h2.version, version);
+    ASSERT_STREQ(h2.version, "NifflerDB 0.1");
     EXPECT_EQ(h2.page_size, 1);
     EXPECT_EQ(h2.num_pages, 2);
     EXPECT_EQ(h2.first_free_list_page, 3);

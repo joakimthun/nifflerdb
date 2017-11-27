@@ -51,8 +51,6 @@ TEST(BP_TREE_DEFAULT, LOAD_1000)
             auto result = validate_bp_tree(t);
             EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
         }
-
-        auto x = 10;
     }
     
     auto loaded_p = create_pager("files/test_default.ndb", false);

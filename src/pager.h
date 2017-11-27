@@ -21,7 +21,7 @@ namespace niffler {
 
     struct file_header
     {
-        char version[16];
+        char version[24];
         u16 page_size;
         u32 num_pages;
         page_index first_free_list_page;

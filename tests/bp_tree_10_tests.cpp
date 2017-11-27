@@ -303,7 +303,7 @@ TEST(BP_TREE_10, INSERT_1000_KEYS)
 {
     auto p = create_pager("files/test_10.ndb");
     auto t = bp_tree<10>::create(p.get()).value;
-    const auto num_keys = 25;
+    const auto num_keys = 1000;
 
     for (auto i = 0; i < num_keys; i++)
     {

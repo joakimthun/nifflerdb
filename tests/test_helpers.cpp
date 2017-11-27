@@ -186,9 +186,6 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
 
     while (leaf.next_page)
     {
-        bp_tree_leaf<N> leaf_prev;
-        tree->load(leaf_prev, leaf.prev_page);
-
         result = validate_bp_tree_leaf(tree, leaf, current_leaf_page, current_prev_page);
         if (!result.valid)
             return result;
