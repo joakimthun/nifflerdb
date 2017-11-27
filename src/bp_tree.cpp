@@ -15,7 +15,7 @@ namespace niffler {
     template<u32 N>
     constexpr void bp_tree<N>::assert_sizes()
     {
-        static_assert(sizeof(bp_tree_header) == 36, "sizeof(bp_tree_header) != 36");
+        static_assert(sizeof(bp_tree_header) == 32, "sizeof(bp_tree_header) != 32");
         static_assert(sizeof(bp_tree_node_child) == 8, "sizeof(bp_tree_node_child) != 8");
         static_assert(sizeof(bp_tree_record) == 8, "sizeof(bp_tree_record) != 8");
         static_assert(sizeof(bp_tree_node<N>) == (20 + sizeof(bp_tree_node_child) * N), "wrong size: bp_tree_node<N>");
@@ -25,7 +25,6 @@ namespace niffler {
     template<u32 N>
     result<bp_tree<N>> bp_tree<N>::load(pager *pager)
     {
-        // TODO: Remove the size and padding requirements with some kind of serialization
         bp_tree<N>::assert_sizes();
         
         auto t = std::make_unique<bp_tree<N>>(pager);
@@ -37,7 +36,6 @@ namespace niffler {
     template<u32 N>
     result<bp_tree<N>> bp_tree<N>::create(pager *pager)
     {
-        // TODO: Remove the size and padding requirements with some kind of serialization
         bp_tree<N>::assert_sizes();
 
         auto t = std::make_unique<bp_tree<N>>(pager);
@@ -46,7 +44,6 @@ namespace niffler {
         assert(header_page.index == HEADER_PAGE_INDEX);
 
         t->header_.order = N;
-        t->header_.value_size = sizeof(value);
         t->header_.key_size = sizeof(key);
         t->header_.height = 1;
 

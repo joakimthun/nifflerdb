@@ -55,7 +55,7 @@ TEST(BP_TREE_DEFAULT, LOAD_1000)
         auto x = 10;
     }
     
-    auto loaded_p = create_pager("files/test_default.ndb", file_mode::read_update);
+    auto loaded_p = create_pager("files/test_default.ndb", false);
     auto loaded_t = bp_tree<DEFAULT_TREE_ORDER>::load(loaded_p.get()).value;
     
     for (auto i = 0; i < num_keys; i++)
@@ -80,7 +80,7 @@ TEST(BP_TREE_DEFAULT, LOAD_5000)
         }
     }
 
-    auto loaded_p = create_pager("files/test_default.ndb", file_mode::read_update);
+    auto loaded_p = create_pager("files/test_default.ndb", false);
     auto loaded_t = bp_tree<DEFAULT_TREE_ORDER>::load(loaded_p.get()).value;
 
     for (auto i = 0; i < num_keys; i++)

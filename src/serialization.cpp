@@ -5,6 +5,21 @@
 namespace niffler {
 
     static 
+    void write_u16(u8 **buffer, u16 value)
+    {
+        memcpy(*buffer, &value, sizeof(u16));
+        *buffer += sizeof(u16);
+    }
+
+    static
+    u16 read_u16(const u8 **buffer)
+    {
+        const auto value = (u16*)*buffer;
+        *buffer += sizeof(u16);
+        return *value;
+    }
+
+    static
     void write_u32(u8 **buffer, u32 value)
     {
         memcpy(*buffer, &value, sizeof(u32));
@@ -34,12 +49,49 @@ namespace niffler {
         return *value;
     }
 
+    void serialize_file_header(u8 *buffer, const file_header &header)
+    {
+        static_assert(sizeof(page_index) == sizeof(u32));
+
+        memcpy(buffer, header.version, sizeof(header.version));
+        buffer += sizeof(header.version);
+
+        write_u16(&buffer, header.page_size);
+        write_u32(&buffer, header.num_pages);
+        write_u32(&buffer, header.first_free_list_page);
+        write_u32(&buffer, header.num_free_list_pages);
+    }
+
+    void deserialize_file_header(const u8 *buffer, file_header &header)
+    {
+        memcpy(header.version, buffer, sizeof(header.version));
+        buffer += sizeof(header.version);
+
+        header.page_size = read_u16(&buffer);
+        header.num_pages = read_u32(&buffer);
+        header.first_free_list_page = read_u32(&buffer);
+        header.num_free_list_pages = read_u32(&buffer);
+    }
+
+    void serialize_page_header(u8 *buffer, const page_header &header)
+    {
+        static_assert(sizeof(page_index) == sizeof(u32));
+
+        write_u32(&buffer, header.next_page);
+        write_u32(&buffer, header.prev_page);
+    }
+
+    void deserialize_page_header(const u8 *buffer, page_header &header)
+    {
+        header.next_page = read_u32(&buffer);
+        header.prev_page = read_u32(&buffer);
+    }
+
     void serialize_bp_tree_header(u8 *buffer, const bp_tree_header &header)
     {
         static_assert(sizeof(page_index) == sizeof(u32));
 
         write_u32(&buffer, header.order);
-        write_u32(&buffer, header.value_size);
         write_u32(&buffer, header.key_size);
         write_u32(&buffer, header.num_internal_nodes);
         write_u32(&buffer, header.num_leaf_nodes);
@@ -53,7 +105,6 @@ namespace niffler {
         static_assert(sizeof(page_index) == sizeof(u32));
 
         header.order = read_u32(&buffer);
-        header.value_size = read_u32(&buffer);
         header.key_size = read_u32(&buffer);
         header.num_internal_nodes = read_u32(&buffer);
         header.num_leaf_nodes = read_u32(&buffer);

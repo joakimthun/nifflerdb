@@ -32,9 +32,9 @@ struct bp_tree_validation_result {
 template<size_t N>
 bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree);
 
-inline std::unique_ptr<pager> create_pager(const char *file_path, file_mode fm = file_mode::write_update)
+inline std::unique_ptr<pager> create_pager(const char *file_path, bool truncate_existing_file = true)
 {
-    return std::make_unique<pager>(file_path, fm);
+    return std::make_unique<pager>(file_path, truncate_existing_file);
 }
 
 inline void random_keys_test(std::size_t rand_seed, std::size_t num_keys)

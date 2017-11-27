@@ -1,9 +1,16 @@
 #pragma once
 
 #include "define.h"
+#include "pager.h"
 #include "bp_tree.h"
 
 namespace niffler {
+
+    void serialize_file_header(u8 *buffer, const file_header &header);
+    void deserialize_file_header(const u8 *buffer, file_header &header);
+
+    void serialize_page_header(u8 *buffer, const page_header &header);
+    void deserialize_page_header(const u8 *buffer, page_header &header);
 
     void serialize_bp_tree_header(u8 *buffer, const bp_tree_header &header);
     void deserialize_bp_tree_header(const u8 *buffer, bp_tree_header &header);

@@ -21,48 +21,74 @@ namespace niffler {
     using value = int;
 
     struct bp_tree_header {
+        page_index page = 0;
+
         u32 order = 0;
-        u32 value_size = 0;
         u32 key_size = 0;
         u32 num_internal_nodes = 0;
         u32 num_leaf_nodes = 0;
         u32 height = 0;
-        page_index page = 0;
         page_index root_page = 0;
         page_index leaf_page = 0;
+
+        static inline constexpr u32 DISK_SIZE()
+        {
+            return sizeof(order) + sizeof(key_size) + sizeof(num_internal_nodes)
+                + sizeof(num_leaf_nodes) + sizeof(height) + sizeof(root_page) + sizeof(leaf_page);
+        }
     };
 
     struct bp_tree_node_child {
         key key;
         page_index page;
+
+        static inline constexpr u32 DISK_SIZE() { return sizeof(key) + sizeof(page); }
     };
 
     template<u32 N>
     struct bp_tree_node {
         page_index page = 0;
+
         page_index parent_page = 0;
         page_index next_page = 0;
         page_index prev_page = 0;
         u32 num_children = 0;
         bp_tree_node_child children[N] = { 0 };
+
+        inline constexpr u32 DISK_SIZE()
+        {
+            return sizeof(parent_page) + sizeof(next_page) + sizeof(prev_page)
+                + sizeof(num_children) + sizeof(children);
+        }
     };
+
+    constexpr u32 NODE_DISK_SIZE_NO_CHILDREN = sizeof(page_index) + sizeof(page_index) + sizeof(page_index) + sizeof(u32);
 
     struct bp_tree_record {
         key key;
         value value;
+
+        inline constexpr u32 DISK_SIZE() { return sizeof(key) + sizeof(value); }
     };
 
     template<u32 N>
     struct bp_tree_leaf {
         page_index page = 0;
+
         page_index parent_page = 0;
         page_index next_page = 0;
         page_index prev_page = 0;
         u32 num_children = 0;
         bp_tree_record children[N] = { 0 };
+
+        inline constexpr u32 DISK_SIZE()
+        {
+            return sizeof(parent_page) + sizeof(next_page) + sizeof(prev_page)
+                + sizeof(num_children) + sizeof(children);
+        }
     };
 
-    constexpr u32 DEFAULT_TREE_ORDER = (PAGE_SIZE - 20) / sizeof(bp_tree_node_child);
+    constexpr u32 DEFAULT_TREE_ORDER = ((PAGE_SIZE - NODE_DISK_SIZE_NO_CHILDREN) / bp_tree_node_child::DISK_SIZE()) - page_header::DISK_SIZE();
 
     enum class lender_side : uint8_t {
         left,
