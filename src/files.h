@@ -25,4 +25,5 @@ namespace niffler {
     };
 
     int fsync(FILE *file);
+    int ftruncate(FILE *file, size_t length);
 }

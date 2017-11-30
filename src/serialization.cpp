@@ -1,6 +1,7 @@
 #include "serialization.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 namespace niffler {
 
@@ -58,7 +59,7 @@ namespace niffler {
 
         write_u16(&buffer, header.page_size);
         write_u32(&buffer, header.num_pages);
-        write_u32(&buffer, header.first_free_list_page);
+        write_u32(&buffer, header.last_free_list_page);
         write_u32(&buffer, header.num_free_list_pages);
     }
 
@@ -69,7 +70,7 @@ namespace niffler {
 
         header.page_size = read_u16(&buffer);
         header.num_pages = read_u32(&buffer);
-        header.first_free_list_page = read_u32(&buffer);
+        header.last_free_list_page = read_u32(&buffer);
         header.num_free_list_pages = read_u32(&buffer);
     }
 
@@ -85,6 +86,40 @@ namespace niffler {
     {
         header.next_page = read_u32(&buffer);
         header.prev_page = read_u32(&buffer);
+    }
+
+    void serialize_free_list_header(u8 * buffer, const free_list_header &header)
+    {
+        write_u32(&buffer, header.next_page);
+        write_u32(&buffer, header.prev_page);
+        write_u32(&buffer, header.num_pages);
+    }
+
+    void deserialize_free_list_header(const u8 * buffer, free_list_header &header)
+    {
+        header.next_page = read_u32(&buffer);
+        header.prev_page = read_u32(&buffer);
+        header.num_pages = read_u32(&buffer);
+    }
+
+    void write_free_list_page_index(u8 * buffer, u32 index, page_index page_index)
+    {
+        const auto ptr_offset = free_list_header::DISK_SIZE() + (sizeof(u32) * index);
+        assert(ptr_offset <= free_list_header::MAX_PAGES_SECTION_OFFSET());
+        assert(ptr_offset >= free_list_header::DISK_SIZE());
+
+        const auto page_index_ptr = buffer + ptr_offset;
+        *((u32*)page_index_ptr) = page_index;
+    }
+
+    u32 read_free_list_page_index(const u8 *buffer, u32 index)
+    {
+        const auto ptr_offset = free_list_header::DISK_SIZE() + (sizeof(u32) * index);
+        assert(ptr_offset <= free_list_header::MAX_PAGES_SECTION_OFFSET());
+        assert(ptr_offset >= free_list_header::DISK_SIZE());
+
+        const auto page_index_ptr = buffer + ptr_offset;
+        return *((u32*)page_index_ptr);
     }
 
     void serialize_bp_tree_header(u8 *buffer, const bp_tree_header &header)

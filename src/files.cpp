@@ -66,8 +66,14 @@ namespace niffler {
         return 0;
     }
 
+    int ftruncate(FILE *file, size_t length)
+    {
+        assert(length >= 0);
+        return _chsize(_fileno(file), static_cast<long>(length));
+    }
+
 #else
-# error "niffler::fsync not implemented"
+# error "niffler::fsync and niffler::ftruncate not implemented"
 #endif
 
 }
