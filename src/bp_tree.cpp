@@ -1154,7 +1154,7 @@ namespace niffler {
     template<u32 N>
     void bp_tree<N>::free(u32 size, page_index page)
     {
-        //TODO: Free this block in pager
+        pager_->free_page(page);
     }
 
     template<u32 N>
