@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 #include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "define.h"
 #include "util.h"
@@ -17,8 +19,43 @@ namespace niffler {
     using std::string;
     using std::stringstream;
 
-    using key = int;
     using value = int;
+    
+    constexpr u32 KEY_SIZE = 16;
+
+    struct key {
+        char data[KEY_SIZE] = { 0 };
+
+        inline key() {}
+
+        inline key(int key) {
+            _itoa_s(key, data, 10);
+        }
+
+        inline key(const char *key) {
+            strcpy_s(data, sizeof(data), key);
+        }
+    };
+
+    inline int key_cmp(const key &lhs, const key &rhs) {
+        const auto len_diff = strlen(lhs.data) - strlen(rhs.data);
+        if (len_diff == 0)
+            return strcmp(lhs.data, rhs.data);
+
+        return len_diff;
+    }
+
+    inline bool operator==(const key& lhs, const key& rhs) { return key_cmp(lhs, rhs) == 0; }
+    inline bool operator!=(const key& lhs, const key& rhs) { return !(lhs == rhs); }
+    inline bool operator< (const key& lhs, const key& rhs) { return key_cmp(lhs, rhs) < 0; }
+    inline bool operator> (const key& lhs, const key& rhs) { return rhs < lhs; }
+    inline bool operator<=(const key& lhs, const key& rhs) { return !(lhs > rhs); }
+    inline bool operator>=(const key& lhs, const key& rhs) { return !(lhs < rhs); }
+
+    /*std::ostream& operator<<(stringstream& os, const key& obj)
+    {
+        return os;
+    }*/
 
     struct bp_tree_header {
         page_index page = 0;

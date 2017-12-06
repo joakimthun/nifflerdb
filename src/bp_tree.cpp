@@ -16,8 +16,8 @@ namespace niffler {
     constexpr void bp_tree<N>::assert_sizes()
     {
         static_assert(sizeof(bp_tree_header) == 32, "sizeof(bp_tree_header) != 32");
-        static_assert(sizeof(bp_tree_node_child) == 8, "sizeof(bp_tree_node_child) != 8");
-        static_assert(sizeof(bp_tree_record) == 8, "sizeof(bp_tree_record) != 8");
+        static_assert(sizeof(bp_tree_node_child) == 20, "sizeof(bp_tree_node_child) != 8");
+        static_assert(sizeof(bp_tree_record) == 20, "sizeof(bp_tree_record) != 8");
         static_assert(sizeof(bp_tree_node<N>) == (20 + sizeof(bp_tree_node_child) * N), "wrong size: bp_tree_node<N>");
         static_assert(sizeof(bp_tree_leaf<N>) == (20 + sizeof(bp_tree_record) * N), "wrong size: bp_tree_leaf<N>");
     }
@@ -44,7 +44,7 @@ namespace niffler {
         assert(header_page.index == HEADER_PAGE_INDEX);
 
         t->header_.order = N;
-        t->header_.key_size = sizeof(key);
+        t->header_.key_size = KEY_SIZE;
         t->header_.height = 1;
 
         auto root_page = pager->get_free_page();
@@ -1194,7 +1194,7 @@ namespace niffler {
     template<u32 N>
     void bp_tree<N>::print_node_level(stringstream &ss, page_index node_page) const
     {
-        bp_tree_node<N> n;
+        /*bp_tree_node<N> n;
         load(n, node_page);
 
         ss << "[PG:" << node_page << " P:" << n.parent_page << " PR:" << n.prev_page << " N:" << n.next_page << " {";
@@ -1213,13 +1213,13 @@ namespace niffler {
         if (n.next_page != 0)
         {
             print_node_level(ss, n.next_page);
-        }
+        }*/
     }
 
     template<u32 N>
     void bp_tree<N>::print_leaf_level(stringstream &ss, page_index leaf_page) const
     {
-        bp_tree_leaf<N> l;
+        /*bp_tree_leaf<N> l;
         load(l, leaf_page);
 
         ss << "[PG:" << leaf_page << " P:" << l.parent_page << " PR:" << l.prev_page << " N:" << l.next_page << " {";
@@ -1238,7 +1238,7 @@ namespace niffler {
         if (l.next_page != 0)
         {
             print_leaf_level(ss, l.next_page);
-        }
+        }*/
     }
 
     template<u32 N>
