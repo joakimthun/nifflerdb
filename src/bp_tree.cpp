@@ -1194,14 +1194,16 @@ namespace niffler {
     template<u32 N>
     void bp_tree<N>::print_node_level(stringstream &ss, page_index node_page) const
     {
-        /*bp_tree_node<N> n;
+        bp_tree_node<N> n;
         load(n, node_page);
 
         ss << "[PG:" << node_page << " P:" << n.parent_page << " PR:" << n.prev_page << " N:" << n.next_page << " {";
 
         for (auto i = 0u; i < n.num_children; i++)
         {
-            ss << "{" << n.children[i].key << "," << n.children[i].page << "}";
+            ss << "{"; 
+            n.children[i].key.append_to(ss) << "," << n.children[i].page << "}";
+
             if (i != n.num_children - 1)
             {
                 ss << ",";
@@ -1213,20 +1215,20 @@ namespace niffler {
         if (n.next_page != 0)
         {
             print_node_level(ss, n.next_page);
-        }*/
+        }
     }
 
     template<u32 N>
     void bp_tree<N>::print_leaf_level(stringstream &ss, page_index leaf_page) const
     {
-        /*bp_tree_leaf<N> l;
+        bp_tree_leaf<N> l;
         load(l, leaf_page);
 
         ss << "[PG:" << leaf_page << " P:" << l.parent_page << " PR:" << l.prev_page << " N:" << l.next_page << " {";
 
         for (auto i = 0u; i < l.num_children; i++)
         {
-            ss << l.children[i].key;
+            l.children[i].key.append_to(ss);
             if (i != l.num_children - 1)
             {
                 ss << ",";
@@ -1238,7 +1240,7 @@ namespace niffler {
         if (l.next_page != 0)
         {
             print_leaf_level(ss, l.next_page);
-        }*/
+        }
     }
 
     template<u32 N>

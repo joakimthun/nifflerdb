@@ -35,6 +35,12 @@ namespace niffler {
         inline key(const char *key) {
             strcpy_s(data, sizeof(data), key);
         }
+
+        inline stringstream& append_to(stringstream& ss) const
+        {
+            ss << data;
+            return ss;
+        }
     };
 
     inline int key_cmp(const key &lhs, const key &rhs) {
@@ -51,11 +57,6 @@ namespace niffler {
     inline bool operator> (const key& lhs, const key& rhs) { return rhs < lhs; }
     inline bool operator<=(const key& lhs, const key& rhs) { return !(lhs > rhs); }
     inline bool operator>=(const key& lhs, const key& rhs) { return !(lhs < rhs); }
-
-    /*std::ostream& operator<<(stringstream& os, const key& obj)
-    {
-        return os;
-    }*/
 
     struct bp_tree_header {
         page_index page = 0;
