@@ -35,12 +35,6 @@ namespace niffler {
         inline key(const char *key) {
             strcpy_s(data, sizeof(data), key);
         }
-
-        inline stringstream& append_to(stringstream& ss) const
-        {
-            ss << data;
-            return ss;
-        }
     };
 
     inline int key_cmp(const key &lhs, const key &rhs) {

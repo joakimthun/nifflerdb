@@ -12,6 +12,13 @@ namespace niffler {
 
     constexpr u32 HEADER_PAGE_INDEX = 1;
 
+    static
+    stringstream& append_key_to_stringstream(const key &key, stringstream& ss)
+    {
+        ss << key.data;
+        return ss;
+    }
+
     template<u32 N>
     constexpr void bp_tree<N>::assert_sizes()
     {
@@ -1202,7 +1209,7 @@ namespace niffler {
         for (auto i = 0u; i < n.num_children; i++)
         {
             ss << "{"; 
-            n.children[i].key.append_to(ss) << "," << n.children[i].page << "}";
+            append_key_to_stringstream(n.children[i].key, ss) << "," << n.children[i].page << "}";
 
             if (i != n.num_children - 1)
             {
@@ -1228,7 +1235,7 @@ namespace niffler {
 
         for (auto i = 0u; i < l.num_children; i++)
         {
-            l.children[i].key.append_to(ss);
+            append_key_to_stringstream(l.children[i].key, ss);
             if (i != l.num_children - 1)
             {
                 ss << ",";
