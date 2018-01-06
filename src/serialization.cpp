@@ -36,21 +36,6 @@ namespace niffler {
     }
 
     static
-    void write_int(u8 **buffer, int value)
-    {
-        memcpy(*buffer, &value, sizeof(int));
-        *buffer += sizeof(int);
-    }
-
-    static
-    int read_int(const u8 **buffer)
-    {
-        const auto value = (int*)*buffer;
-        *buffer += sizeof(int);
-        return *value;
-    }
-
-    static
     void write_key(u8 **buffer, const key &k)
     {
         static_assert(sizeof(char) == 1);
