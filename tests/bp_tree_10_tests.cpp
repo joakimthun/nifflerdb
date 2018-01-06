@@ -87,27 +87,28 @@ TEST(BP_TREE_10, INSERT_RECORD_AT)
     auto p = create_pager("files/test_10.ndb");
     auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> leaf;
+    value v = { 0 };
 
-    t->insert_record_at(leaf, -1, 0, 0);
+    t->insert_record_at(leaf, -1, v, 0);
     EXPECT_EQ(1, leaf.num_children);
     EXPECT_EQ(-1, leaf.children[0].key);
 
-    t->insert_record_at(leaf, -2, 0, 0);
+    t->insert_record_at(leaf, -2, v, 0);
     EXPECT_EQ(2, leaf.num_children);
     EXPECT_EQ(-2, leaf.children[0].key);
 
-    t->insert_record_at(leaf, 1, 0, 2);
+    t->insert_record_at(leaf, 1, v, 2);
     EXPECT_EQ(3, leaf.num_children);
     EXPECT_EQ(1, leaf.children[2].key);
 
-    t->insert_record_at(leaf, 0, 0, 2);
+    t->insert_record_at(leaf, 0, v, 2);
     EXPECT_EQ(4, leaf.num_children);
     EXPECT_EQ(-2, leaf.children[0].key);
     EXPECT_EQ(-1, leaf.children[1].key);
     EXPECT_EQ(0, leaf.children[2].key);
     EXPECT_EQ(1, leaf.children[3].key);
 
-    t->insert_record_at(leaf, 2, 0, 4);
+    t->insert_record_at(leaf, 2, v, 4);
     EXPECT_EQ(5, leaf.num_children);
     EXPECT_EQ(-2, leaf.children[0].key);
     EXPECT_EQ(-1, leaf.children[1].key);
@@ -115,7 +116,7 @@ TEST(BP_TREE_10, INSERT_RECORD_AT)
     EXPECT_EQ(1, leaf.children[3].key);
     EXPECT_EQ(2, leaf.children[4].key);
 
-    t->insert_record_at(leaf, -3, 0, 0);
+    t->insert_record_at(leaf, -3, v, 0);
     EXPECT_EQ(6, leaf.num_children);
     EXPECT_EQ(-3, leaf.children[0].key);
     EXPECT_EQ(-2, leaf.children[1].key);
@@ -204,26 +205,26 @@ TEST(BP_TREE_10, INSERT_RECORD_NON_FULL)
     auto t = bp_tree<10>::create(p.get()).value;
     bp_tree_leaf<10> leaf;
 
-    t->insert_record_non_full(leaf, 2, 0);
+    t->insert_record_non_full(leaf, 2, "", 0);
     EXPECT_EQ(1, leaf.num_children);
     EXPECT_EQ(2, leaf.children[0].key);
 
-    t->insert_record_non_full(leaf, 1, 0);
+    t->insert_record_non_full(leaf, 1, "", 0);
     EXPECT_EQ(2, leaf.num_children);
     EXPECT_EQ(1, leaf.children[0].key);
 
-    t->insert_record_non_full(leaf, 4, 0);
+    t->insert_record_non_full(leaf, 4, "", 0);
     EXPECT_EQ(3, leaf.num_children);
     EXPECT_EQ(4, leaf.children[2].key);
 
-    t->insert_record_non_full(leaf, 3, 0);
+    t->insert_record_non_full(leaf, 3, "", 0);
     EXPECT_EQ(4, leaf.num_children);
     EXPECT_EQ(1, leaf.children[0].key);
     EXPECT_EQ(2, leaf.children[1].key);
     EXPECT_EQ(3, leaf.children[2].key);
     EXPECT_EQ(4, leaf.children[3].key);
 
-    t->insert_record_non_full(leaf, 5, 0);
+    t->insert_record_non_full(leaf, 5, "", 0);
     EXPECT_EQ(5, leaf.num_children);
     EXPECT_EQ(1, leaf.children[0].key);
     EXPECT_EQ(2, leaf.children[1].key);
@@ -231,7 +232,7 @@ TEST(BP_TREE_10, INSERT_RECORD_NON_FULL)
     EXPECT_EQ(4, leaf.children[3].key);
     EXPECT_EQ(5, leaf.children[4].key);
 
-    t->insert_record_non_full(leaf, 0, 0);
+    t->insert_record_non_full(leaf, 0, "", 0);
     EXPECT_EQ(6, leaf.num_children);
     EXPECT_EQ(0, leaf.children[0].key);
     EXPECT_EQ(1, leaf.children[1].key);
@@ -294,8 +295,8 @@ TEST(BP_TREE_10, INSERT_NON_SPLIT)
 
     for (auto i = 0u; i < t->MAX_NUM_CHILDREN(); i++)
     {
-        EXPECT_EQ(true, t->insert(i, i)) << "i: " << i;
-        EXPECT_EQ(false, t->insert(i, i)) << "i: " << i;
+        EXPECT_EQ(true, t->insert(i, "", 0)) << "i: " << i;
+        EXPECT_EQ(false, t->insert(i, "", 0)) << "i: " << i;
     }
 }
 
@@ -307,14 +308,14 @@ TEST(BP_TREE_10, INSERT_1000_KEYS)
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(true, t->insert(i, i));
+        EXPECT_EQ(true, t->insert(i, "", 0));
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
     }
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(false, t->insert(i, i));
+        EXPECT_EQ(false, t->insert(i, "", 0));
     }
 }
 
@@ -328,10 +329,10 @@ TEST(BP_TREE_10, INSERT_1000_RANDOM_KEYS)
     for (auto i = 0; i < num_keys; i++)
     {
         auto key = rand();
-        t->insert(key, i);
+        t->insert(key, "", 0);
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << key << ", index: " << i;
-        EXPECT_EQ(false, t->insert(key, i));
+        EXPECT_EQ(false, t->insert(key, "", 0));
     }
 }
 
@@ -415,7 +416,7 @@ TEST(BP_TREE_10, REMOVE_NO_MERGE_BORROW)
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(true, t->insert(i, i));
+        EXPECT_EQ(true, t->insert(i, "", 0));
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
     }
@@ -454,7 +455,7 @@ TEST(BP_TREE_10, REMOVE_NO_MERGE)
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(true, t->insert(i, i));
+        EXPECT_EQ(true, t->insert(i, "", 0));
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
     }
@@ -519,7 +520,7 @@ TEST(BP_TREE_10, ADD_REMOVE_100_X2)
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(true, t->insert(i, i));
+        EXPECT_EQ(true, t->insert(i, "", 0));
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
     }
@@ -533,7 +534,7 @@ TEST(BP_TREE_10, ADD_REMOVE_100_X2)
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(true, t->insert(i, i));
+        EXPECT_EQ(true, t->insert(i, "", 0));
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
     }
@@ -554,7 +555,7 @@ TEST(BP_TREE_10, ADD_REMOVE_1000)
 
     for (auto i = 0; i < num_keys; i++)
     {
-        EXPECT_EQ(true, t->insert(i, i));
+        EXPECT_EQ(true, t->insert(i, "", 0));
         auto result = validate_bp_tree(t);
         EXPECT_EQ(true, result.valid) << result.message << std::endl << "key: " << i;
     }

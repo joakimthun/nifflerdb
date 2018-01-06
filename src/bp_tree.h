@@ -19,8 +19,6 @@ namespace niffler {
     using std::string;
     using std::stringstream;
 
-    using value = int;
-    
     constexpr u32 KEY_SIZE = 16;
 
     struct key {
@@ -51,6 +49,11 @@ namespace niffler {
     inline bool operator> (const key& lhs, const key& rhs) { return rhs < lhs; }
     inline bool operator<=(const key& lhs, const key& rhs) { return !(lhs > rhs); }
     inline bool operator>=(const key& lhs, const key& rhs) { return !(lhs < rhs); }
+
+    struct value {
+        u32 size = 0;
+        page_index first_page = 0;
+    };
 
     struct bp_tree_header {
         page_index page = 0;
@@ -87,7 +90,7 @@ namespace niffler {
         u32 num_children = 0;
         bp_tree_node_child children[N] = { 0 };
 
-        inline constexpr u32 DISK_SIZE()
+        static inline constexpr u32 DISK_SIZE()
         {
             return sizeof(parent_page) + sizeof(next_page) + sizeof(prev_page)
                 + sizeof(num_children) + sizeof(children);
@@ -100,7 +103,7 @@ namespace niffler {
         key key;
         value value;
 
-        inline constexpr u32 DISK_SIZE() { return sizeof(key) + sizeof(value); }
+        static inline constexpr u32 DISK_SIZE() { return sizeof(key) + sizeof(value); }
     };
 
     template<u32 N>
@@ -113,14 +116,14 @@ namespace niffler {
         u32 num_children = 0;
         bp_tree_record children[N] = { 0 };
 
-        inline constexpr u32 DISK_SIZE()
+        static inline constexpr u32 DISK_SIZE()
         {
             return sizeof(parent_page) + sizeof(next_page) + sizeof(prev_page)
                 + sizeof(num_children) + sizeof(children);
         }
     };
 
-    constexpr u32 DEFAULT_TREE_ORDER = ((PAGE_SIZE - NODE_DISK_SIZE_NO_CHILDREN) / bp_tree_node_child::DISK_SIZE()) - page_header::DISK_SIZE();
+    constexpr u32 DEFAULT_TREE_ORDER = ((PAGE_SIZE - NODE_DISK_SIZE_NO_CHILDREN) / bp_tree_record::DISK_SIZE()) - page_header::DISK_SIZE();
 
     enum class lender_side : uint8_t {
         left,
@@ -145,7 +148,7 @@ namespace niffler {
         const bp_tree_header &header() const;
         string print() const;
         bool exists(const key& key) const;
-        bool insert(const key& key, const value &value);
+        bool insert(const key& key, const void *data, u32 data_size);
         bool remove(const key& key);
 
         constexpr u32 MIN_NUM_CHILDREN() const { return N / 2; }
@@ -153,7 +156,7 @@ namespace niffler {
 
         // Use gtest friend stuff?
         //private:
-        bool insert_internal(const key& key, const value &value);
+        bool insert_internal(const key& key, const void *data, u32 data_size);
         bool remove_internal(const key& key);
 
         void insert_key(page_index node_page, const key &key, page_index left_page, page_index right_page);
@@ -176,9 +179,11 @@ namespace niffler {
 
         void transfer_children(bp_tree_node<N>  &source, bp_tree_node<N>  &target, u32 from_index);
 
-        void insert_record_non_full(bp_tree_leaf<N> &leaf, const key &key, const value &value);
+        void insert_record_non_full(bp_tree_leaf<N> &leaf, const key &key, const void *data, u32 data_size);
         void insert_record_at(bp_tree_leaf<N> &leaf, const key &key, const value &value, u32 index);
-        void insert_record_split(const key& key, const value &value, page_index leaf_page, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf);
+        void insert_record_at_new_value(bp_tree_leaf<N> &leaf, const key &key, const void *data, u32 data_size, u32 index);
+        void insert_record_split(const key& key, const void *data, u32 data_size, page_index leaf_page, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf);
+        void create_data_page(value &value, const void *data, u32 data_size);
         void transfer_records(bp_tree_leaf<N> &source, bp_tree_leaf<N> &target, u32 from_index);
         bool remove_record(bp_tree_leaf<N> &source, const key &key);
         void remove_record_at(bp_tree_leaf<N> &source, u32 index);

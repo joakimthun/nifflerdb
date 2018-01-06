@@ -153,7 +153,8 @@ TEST(SERIALIZATION, BP_TREE_LEAF)
     for (auto i = 0u; i < 10; i++)
     {
         l1.children[i].key = 1;
-        l1.children[i].value = 1;
+        l1.children[i].value.size = 1;
+        l1.children[i].value.first_page = 1;
     }
 
     u8 buffer[1024] = { 0 };
@@ -170,6 +171,7 @@ TEST(SERIALIZATION, BP_TREE_LEAF)
     for (auto i = 0u; i < 10; i++)
     {
         EXPECT_EQ(l2.children[i].key, 1);
-        EXPECT_EQ(l2.children[i].value, 1);
+        EXPECT_EQ(l2.children[i].value.size, 1);
+        EXPECT_EQ(l2.children[i].value.first_page, 1);
     }
 }

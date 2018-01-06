@@ -148,7 +148,7 @@ bp_tree_validation_result validate_bp_tree(std::unique_ptr<bp_tree<N>> &tree)
     if (root.num_children == 0)
         return "root has no children";
 
-    auto result = validate_bp_tree_keys(tree, root, tree->header().height <= 2);
+    auto result = validate_bp_tree_keys(tree, root, tree->header().height <= 1);
     if (!result.valid)
         return result;
 

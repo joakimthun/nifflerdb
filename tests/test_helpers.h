@@ -44,6 +44,9 @@ inline void random_keys_test(std::size_t rand_seed, std::size_t num_keys)
     srand(rand_seed);
     auto added_keys = std::unordered_set<int>();
 
+    char *value = "test value";
+    const auto value_size = strlen(value);
+
     for (auto i = 0u; i < num_keys; i++)
     {
         auto key = rand();
@@ -52,13 +55,13 @@ inline void random_keys_test(std::size_t rand_seed, std::size_t num_keys)
         if (added_keys.find(key) != added_keys.end())
             continue;
 
-        auto insert_result = t->insert(key, i);
+        auto insert_result = t->insert(key, value, value_size);
         EXPECT_EQ(true, insert_result) << "insert key: " << key << ", index: " << i << ", seed:" << rand_seed;
 
         auto validate_result = validate_bp_tree(t);
         EXPECT_EQ(true, validate_result.valid) << validate_result.message << std::endl << "insert key: " << key << ", index: " << i << ", seed:" << rand_seed;
 
-        insert_result = t->insert(key, i);
+        insert_result = t->insert(key, value, value_size);
 
         EXPECT_EQ(false, insert_result);
         added_keys.insert(key);

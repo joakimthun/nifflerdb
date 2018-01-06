@@ -66,6 +66,20 @@ namespace niffler {
         *buffer += KEY_SIZE;
     }
 
+    static
+    void write_value(u8 **buffer, const value &v)
+    {
+        write_u32(buffer, v.size);
+        write_u32(buffer, v.first_page);
+    }
+
+    static
+    void read_value(const u8 **buffer, value &v)
+    {
+        v.size = read_u32(buffer);
+        v.first_page = read_u32(buffer);
+    }
+
     void serialize_file_header(u8 *buffer, const file_header &header)
     {
         static_assert(sizeof(page_index) == sizeof(u32));
@@ -197,8 +211,6 @@ namespace niffler {
     template<u32 N>
     void serialize_bp_tree_leaf(u8 *buffer, const bp_tree_leaf<N> &leaf)
     {
-        static_assert(sizeof(value) == sizeof(int));
-
         write_u32(&buffer, leaf.parent_page);
         write_u32(&buffer, leaf.next_page);
         write_u32(&buffer, leaf.prev_page);
@@ -207,7 +219,7 @@ namespace niffler {
         for (auto i = 0u; i < leaf.num_children; i++)
         {
             write_key(&buffer, leaf.children[i].key);
-            write_int(&buffer, leaf.children[i].value);
+            write_value(&buffer, leaf.children[i].value);
         }
     }
 
@@ -222,7 +234,7 @@ namespace niffler {
         for (auto i = 0u; i < leaf.num_children; i++)
         {
             read_key(&buffer, leaf.children[i].key);
-            leaf.children[i].value = read_int(&buffer);
+            read_value(&buffer, leaf.children[i].value);
         }
     }
 

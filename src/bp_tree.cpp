@@ -23,8 +23,8 @@ namespace niffler {
     constexpr void bp_tree<N>::assert_sizes()
     {
         static_assert(sizeof(bp_tree_header) == 32, "sizeof(bp_tree_header) != 32");
-        static_assert(sizeof(bp_tree_node_child) == 20, "sizeof(bp_tree_node_child) != 8");
-        static_assert(sizeof(bp_tree_record) == 20, "sizeof(bp_tree_record) != 8");
+        static_assert(sizeof(bp_tree_node_child) == 20, "sizeof(bp_tree_node_child) != 24");
+        static_assert(sizeof(bp_tree_record) == 24, "sizeof(bp_tree_record) != 24");
         static_assert(sizeof(bp_tree_node<N>) == (20 + sizeof(bp_tree_node_child) * N), "wrong size: bp_tree_node<N>");
         static_assert(sizeof(bp_tree_leaf<N>) == (20 + sizeof(bp_tree_record) * N), "wrong size: bp_tree_leaf<N>");
     }
@@ -125,9 +125,9 @@ namespace niffler {
     }
 
     template<u32 N>
-    bool bp_tree<N>::insert(const key &key, const value &value)
+    bool bp_tree<N>::insert(const key &key, const void *data, u32 data_size)
     {
-        if (insert_internal(key, value))
+        if (insert_internal(key, data, data_size))
             return pager_->sync();
 
         return false;
@@ -150,7 +150,7 @@ namespace niffler {
     }
 
     template<u32 N>
-    bool bp_tree<N>::insert_internal(const key &key, const value &value)
+    bool bp_tree<N>::insert_internal(const key &key, const void *data, u32 data_size)
     {
         auto parent_page = search_tree(key);
         assert(parent_page != 0);
@@ -168,12 +168,12 @@ namespace niffler {
         if (leaf.num_children == header_.order)
         {
             bp_tree_leaf<N> new_leaf;
-            insert_record_split(key, value, leaf_page, leaf, new_leaf);
+            insert_record_split(key, data, data_size, leaf_page, leaf, new_leaf);
             insert_key(parent_page, new_leaf.children[0].key, leaf_page, leaf.next_page);
         }
         else
         {
-            insert_record_non_full(leaf, key, value);
+            insert_record_non_full(leaf, key, data, data_size);
             save(leaf, leaf_page);
         }
 
@@ -832,11 +832,11 @@ namespace niffler {
     }
 
     template<u32 N>
-    void bp_tree<N>::insert_record_non_full(bp_tree_leaf<N> &leaf, const key &key, const value &value)
+    void bp_tree<N>::insert_record_non_full(bp_tree_leaf<N> &leaf, const key &key, const void *data, u32 data_size)
     {
         assert((leaf.num_children + 1) <= header_.order);
         auto dest_index = find_insert_index(leaf, key);
-        insert_record_at(leaf, key, value, dest_index);
+        insert_record_at_new_value(leaf, key, data, data_size, dest_index);
     }
 
     template<u32 N>
@@ -856,7 +856,24 @@ namespace niffler {
     }
 
     template<u32 N>
-    void bp_tree<N>::insert_record_split(const key& key, const value &value, page_index leaf_page, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf)
+    void bp_tree<N>::insert_record_at_new_value(bp_tree_leaf<N>& leaf, const key & key, const void *data, u32 data_size, u32 index)
+    {
+        assert(index < (leaf.num_children + 1));
+
+        // Use a signed index to prevent i from wrapping on 0--
+        for (auto i = static_cast<int32_t>(leaf.num_children) - 1; i >= static_cast<int32_t>(index); i--)
+        {
+            leaf.children[i + 1] = leaf.children[i];
+        }
+
+        leaf.children[index].key = key;
+        create_data_page(leaf.children[index].value, data, data_size);
+
+        leaf.num_children++;
+    }
+
+    template<u32 N>
+    void bp_tree<N>::insert_record_split(const key& key, const void *data, u32 data_size, page_index leaf_page, bp_tree_leaf<N> &leaf, bp_tree_leaf<N> &new_leaf)
     {
         assert(leaf.num_children == header_.order);
 
@@ -870,15 +887,28 @@ namespace niffler {
 
         if (key_greater_than_key_at_split)
         {
-            insert_record_non_full(new_leaf, key, value);
+            insert_record_non_full(new_leaf, key, data, data_size);
         }
         else
         {
-            insert_record_non_full(leaf, key, value);
+            insert_record_non_full(leaf, key, data, data_size);
         }
 
         save(leaf, leaf_page);
         save(new_leaf, new_leaf_page);
+    }
+
+    template<u32 N>
+    void bp_tree<N>::create_data_page(value &value, const void *data, u32 data_size)
+    {
+        assert(data_size <= PAGE_SIZE && "Values spanning multiple pages not yet supported");
+
+        auto data_page = pager_->get_free_page();
+        memcpy(data_page.content, data, data_size);
+        data_page.dirty = true;
+
+        value.first_page = data_page.index;
+        value.size = data_size;
     }
 
     template<u32 N>
@@ -911,6 +941,8 @@ namespace niffler {
     void bp_tree<N>::remove_record_at(bp_tree_leaf<N> &source, u32 index)
     {
         assert(index < source.num_children);
+
+        pager_->free_page(source.children[index].value.first_page);
 
         for (auto i = index; i < source.num_children - 1; i++)
         {
@@ -1307,16 +1339,16 @@ namespace niffler {
     template<class T>
     void bp_tree<N>::save(const T &t, page_index page) const
     {
-        assert(sizeof(T) <= PAGE_SIZE);
-
         auto& page_to_save = pager_->get_page(page);
 
         if constexpr (std::is_same<T, bp_tree_node<N>>::value)
         {
+            static_assert(bp_tree_node<N>::DISK_SIZE() <= PAGE_SIZE);
             serialize_bp_tree_node(page_to_save.content, t);
         }
         else if constexpr (std::is_same<T, bp_tree_leaf<N>>::value)
         {
+            static_assert(bp_tree_leaf<N>::DISK_SIZE() <= PAGE_SIZE);
             serialize_bp_tree_leaf(page_to_save.content, t);
         }
         else if constexpr (std::is_same<T, bp_tree_header>::value)
