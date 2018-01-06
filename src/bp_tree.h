@@ -18,6 +18,7 @@ namespace niffler {
     using std::tuple;
     using std::string;
     using std::stringstream;
+    using std::unique_ptr;
 
     constexpr u32 KEY_SIZE = 16;
 
@@ -135,6 +136,21 @@ namespace niffler {
         page_index page_to_delete;
     };
 
+    struct find_result {
+        bool found = false;
+        u32 size = 0;
+        void *data = nullptr;
+
+        inline ~find_result() 
+        {
+            if (data != nullptr)
+            {
+                free(data);
+                data = nullptr;
+            }
+        }
+    };
+
     template<u32 N>
     class bp_tree {
     public:
@@ -147,6 +163,7 @@ namespace niffler {
 
         const bp_tree_header &header() const;
         string print() const;
+        unique_ptr<find_result> find(const key& key) const;
         bool exists(const key& key) const;
         bool insert(const key& key, const void *data, u32 data_size);
         bool remove(const key& key);

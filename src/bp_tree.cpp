@@ -107,6 +107,39 @@ namespace niffler {
     }
 
     template<u32 N>
+    unique_ptr<find_result> bp_tree<N>::find(const key & key) const
+    {
+        auto parent_page = search_tree(key);
+        assert(parent_page != 0);
+
+        bp_tree_node<N> parent;
+        load(parent, parent_page);
+
+        auto leaf_page = search_node(parent, key);
+        assert(leaf_page != 0);
+
+        bp_tree_leaf<N> leaf;
+        load(leaf, leaf_page);
+
+        auto result = std::make_unique<find_result>();
+
+        auto index = binary_search_record(leaf, key);
+        if (index < 0)
+            return result;
+
+
+        const auto& value = leaf.children[index].value;
+        const auto& page = pager_->get_page(value.first_page);
+
+        result->size = value.size;
+        result->data = malloc(value.size);
+        memcpy(result->data, page.content, value.size);
+        result->found = true;
+
+        return result;
+    }
+
+    template<u32 N>
     bool bp_tree<N>::exists(const key & key) const
     {
         auto parent_page = search_tree(key);
