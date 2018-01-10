@@ -9,7 +9,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "define.h"
+#include "include/define.h"
+#include "include/db.h"
 #include "util.h"
 #include "pager.h"
 
@@ -19,37 +20,6 @@ namespace niffler {
     using std::string;
     using std::stringstream;
     using std::unique_ptr;
-
-    constexpr u32 KEY_SIZE = 16;
-
-    struct key {
-        char data[KEY_SIZE] = { 0 };
-
-        inline key() {}
-
-        inline key(int key) {
-            _itoa_s(key, data, 10);
-        }
-
-        inline key(const char *key) {
-            strcpy_s(data, sizeof(data), key);
-        }
-    };
-
-    inline int key_cmp(const key &lhs, const key &rhs) {
-        const auto len_diff = strlen(lhs.data) - strlen(rhs.data);
-        if (len_diff == 0)
-            return strcmp(lhs.data, rhs.data);
-
-        return len_diff;
-    }
-
-    inline bool operator==(const key& lhs, const key& rhs) { return key_cmp(lhs, rhs) == 0; }
-    inline bool operator!=(const key& lhs, const key& rhs) { return !(lhs == rhs); }
-    inline bool operator< (const key& lhs, const key& rhs) { return key_cmp(lhs, rhs) < 0; }
-    inline bool operator> (const key& lhs, const key& rhs) { return rhs < lhs; }
-    inline bool operator<=(const key& lhs, const key& rhs) { return !(lhs > rhs); }
-    inline bool operator>=(const key& lhs, const key& rhs) { return !(lhs < rhs); }
 
     struct value {
         u32 size = 0;
@@ -98,8 +68,6 @@ namespace niffler {
         }
     };
 
-    constexpr u32 NODE_DISK_SIZE_NO_CHILDREN = sizeof(page_index) + sizeof(page_index) + sizeof(page_index) + sizeof(u32);
-
     struct bp_tree_record {
         key key;
         value value;
@@ -124,7 +92,8 @@ namespace niffler {
         }
     };
 
-    constexpr u32 DEFAULT_TREE_ORDER = ((PAGE_SIZE - NODE_DISK_SIZE_NO_CHILDREN) / bp_tree_record::DISK_SIZE()) - page_header::DISK_SIZE();
+    static_assert(bp_tree_record::DISK_SIZE() == 24, "bp_tree_record: wrong disk size");
+    static_assert(page_header::DISK_SIZE() == 8, "page_header: wrong disk size");
 
     enum class lender_side : uint8_t {
         left,
@@ -134,21 +103,6 @@ namespace niffler {
     struct merge_result {
         page_index parent_page;
         page_index page_to_delete;
-    };
-
-    struct find_result {
-        bool found = false;
-        u32 size = 0;
-        void *data = nullptr;
-
-        inline ~find_result() 
-        {
-            if (data != nullptr)
-            {
-                free(data);
-                data = nullptr;
-            }
-        }
     };
 
     template<u32 N>

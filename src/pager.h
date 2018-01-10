@@ -3,7 +3,7 @@
 #include <vector>
 #include <stdlib.h>
 
-#include "define.h"
+#include "include/define.h"
 #include "files.h"
 
 namespace niffler {
@@ -66,6 +66,7 @@ namespace niffler {
         page &get_page(page_index page_index);
         void save_page(page_index page_index);
         bool sync();
+        bool ok() const;
 
     private:
         page &alloc_page();

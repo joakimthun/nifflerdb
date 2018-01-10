@@ -11,6 +11,9 @@ namespace niffler {
         :
         file_handle_(file_path, truncate_existing_file ? file_mode::write_update : file_mode::read_update)
     {
+        if (!file_handle_.ok())
+            return;
+
         pages_.resize(DEFAULT_PAGER_SIZE);
 
         if (truncate_existing_file)
@@ -169,6 +172,11 @@ namespace niffler {
     bool pager::sync()
     {
         return sync(true);
+    }
+
+    bool pager::ok() const
+    {
+        return file_handle_.ok();
     }
 
     page &pager::alloc_page()
