@@ -1,6 +1,6 @@
 # NifflerDB
 
-NifflerDB is a simple and persistent key-value store implemented as a B+ tree.
+NifflerDB is a simple, embeddable and persistent key-value store implemented as a B+ tree.
 
 ## Hello World
 ```c++
