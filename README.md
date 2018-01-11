@@ -27,6 +27,7 @@ bool remove(const key& key);
 ## TODO
 * Better error handling
 * Support for multiple "buckets"
+* Memory-mapped I/O?
 * Transactions?
 
 ## OS Support
