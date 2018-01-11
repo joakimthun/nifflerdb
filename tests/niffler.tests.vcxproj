@@ -197,6 +197,7 @@
   <ItemGroup>
     <ClCompile Include="bp_tree_10_tests.cpp" />
     <ClCompile Include="bp_tree_default_tests.cpp" />
+    <ClCompile Include="db_tests.cpp" />
     <ClCompile Include="key_comp_tests.cpp" />
     <ClCompile Include="pager_tests.cpp" />
     <ClCompile Include="serialization_tests.cpp" />
